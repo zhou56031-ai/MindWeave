@@ -38,7 +38,6 @@
 | [API 文档](#api-文档) | 交互式文档与常用接口 |
 | [配置说明](#配置说明) | 模型、Embedding、存储与索引重建 |
 | [工程化改造](#工程化改造2026-10) | 融合、观测、降级与缓存 |
-| [设计系统](#设计系统) | 黑白令牌与动效规则 |
 | [评测](#评测) | 60 条回归集与指标 |
 | [故障排查](#故障排查) | 常见现象与处理 |
 | [Roadmap](#roadmap) | 已完成与计划中 |
@@ -465,21 +464,6 @@ Compose 会自动覆盖 `MYSQL_HOST`、`REDIS_HOST`、`NEO4J_URI` 为服务名�
 | 评测 | 无 | 60 条回归集 + 引用/拒答检查 | `eval/` |
 
 测试：`cd backend && uv run python -m unittest discover -s tests`，**133 项全绿**。
-
-## 设计系统
-
-界面只有一条明度轴：不出现任何色相。强调色在浅色下是墨黑、深色下是纸白，
-强调块上的文字统一用 `--color-accent-contrast` 自动反相；配色集中在 `front/src/index.css` 的 CSS 变量里。
-
-- 层级靠灰阶、间距与 1px 发丝线，不靠阴影；
-- 圆角收到 2/4/6px，只有标签、头像、开关保留全圆角；
-- 语义用深浅与文案表达，不用红绿黄；
-- 支持 `prefers-reduced-motion`。
-
-<p align="center">
-  <img src="docs/images/design-board-light.png" width="49%" alt="浅色设计板">
-  <img src="docs/images/design-board-dark.png" width="49%" alt="深色设计板">
-</p>
 
 ## 评测
 
