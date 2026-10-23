@@ -93,25 +93,47 @@ MindWeave 是一个**面向个人学习的知识工作台**。它把三件通常
 
 ## 界面预览
 
-**笔记（浅色）**
+以下均为浅色主题，按侧边栏顺序排列。
 
-<img src="docs/images/app-notes-light.png" width="100%" alt="笔记列表 · 浅色">
+**笔记**
 
-**笔记（深色）**
-
-<img src="docs/images/app-notes-dark.png" width="100%" alt="笔记列表 · 深色">
+<img src="docs/images/preview/01-notes.png" width="100%" alt="笔记列表">
 
 **AI 对话**
 
-<img src="docs/images/app-chat-light.png" width="100%" alt="AI 对话">
+<img src="docs/images/preview/02-chat.png" width="100%" alt="AI 对话：答案、引用来源与 token 用量">
+
+**会话管理**
+
+<img src="docs/images/preview/03-sessions.png" width="100%" alt="会话管理">
+
+**用量统计**
+
+<img src="docs/images/preview/04-usage.png" width="100%" alt="用量统计：token、模型调用与耗时">
+
+**每日回顾**
+
+<img src="docs/images/preview/05-review.png" width="100%" alt="每日回顾">
 
 **知识库**
 
-<img src="docs/images/app-knowledge-light.png" width="100%" alt="知识库">
+<img src="docs/images/preview/06-knowledge.png" width="100%" alt="知识库管理">
 
 **知识图谱**
 
-<img src="docs/images/graph-mono.png" width="100%" alt="知识图谱：文档、实体与关系">
+<img src="docs/images/preview/07-graph.png" width="100%" alt="知识图谱">
+
+**个人信息**
+
+<img src="docs/images/preview/08-profile.png" width="100%" alt="个人信息与 AI 记忆总结">
+
+**设置**
+
+<img src="docs/images/preview/09-settings.png" width="100%" alt="设置：主题与语言">
+
+**关于我们**
+
+<img src="docs/images/preview/10-about.png" width="100%" alt="关于我们">
 
 ## 系统架构
 
