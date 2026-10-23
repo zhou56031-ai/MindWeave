@@ -1,4 +1,4 @@
-# 保留旧项目名以复用已有数据卷：改名会让 Docker 视为新项目并挂载空卷。
+# Compose 项目名决定数据卷前缀；改名会挂载一套新的空卷。
 name: mindweave
 
 services:

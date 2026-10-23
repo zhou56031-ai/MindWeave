@@ -32,14 +32,14 @@
 | [界面预览](#界面预览) | 明暗主题与关键页面 |
 | [系统架构](#系统架构) | 组件、存储与数据流 |
 | [一次问答发生了什么](#一次问答发生了什么) | 从提问到引用的完整链路 |
-| [快速开始](#快速开始) | Docker 或本地三进程 |
-| [技术栈](#技术栈) | 语言、框架与存储选型 |
-| [配置说明](#配置说明) | 环境变量与索引重建 |
+| [快速开始](#快速开始) | Docker 一键启动或本地三进程 |
+| [技术栈](#技术栈) | 后端、前端与存储选型 |
+| [项目结构](#项目结构) | 目录与模块职责 |
+| [API 文档](#api-文档) | 交互式文档与常用接口 |
+| [配置说明](#配置说明) | 模型、Embedding、存储与索引重建 |
 | [与上游的差异](#与上游的差异) | 重写范围与保留部分 |
 | [工程化改造](#工程化改造2026-10) | 融合、观测、降级与缓存 |
 | [能力边界](#能力边界) | 明确不支持什么 |
-| [项目结构](#项目结构) | 目录与模块职责 |
-| [开发与测试](#开发与测试) | 测试、构建与约定 |
 | [设计系统](#设计系统) | 黑白令牌与动效规则 |
 | [评测](#评测) | 60 条回归集与指标 |
 | [故障排查](#故障排查) | 常见现象与处理 |
@@ -164,30 +164,34 @@ sequenceDiagram
 
 ## 快速开始
 
-**最短路径**：装好 Docker Desktop → 填 `.env` 里四个密码和两个 API Key → `docker compose up -d` → 打开 <http://127.0.0.1:3100>。
+> 💡 想最快跑起来？直接用 Docker 一键启动，无需在本机安装 Python、Node、MySQL、Redis 或 Neo4j。
 
-### 方式一：Docker（推荐）
+### Docker 一键启动（推荐）
+
+**前置要求**：Docker Desktop 已启动；建议内存 ≥ 4 GB；首次构建约 5–10 分钟。
 
 ```bash
 git clone <your-repo-url> mindweave
 cd mindweave
 
 cp .env.example .env
-# 必填：MYSQL_PASSWORD / MYSQL_ROOT_PASSWORD / NEO4J_PASSWORD / SECRET_KEY
-#       DEEPSEEK_API_KEY / EMBEDDING_API_KEY
-
-docker compose up -d
-docker compose ps          # 六个容器都应为 running / healthy
+# 至少填写：
+#   MYSQL_PASSWORD / MYSQL_ROOT_PASSWORD / NEO4J_PASSWORD / SECRET_KEY
+#   DEEPSEEK_API_KEY
+#   EMBEDDING_API_KEY（使用远程 Embedding 时）
+docker compose up -d --build
 ```
 
-| 入口 | 地址 |
-|---|---|
-| 前端 | <http://127.0.0.1:3100> |
-| 后端 API 文档 | <http://127.0.0.1:8100/docs> |
-| 健康检查 | <http://127.0.0.1:8100/health/ready> |
-| Neo4j Browser | <http://127.0.0.1:17474> |
+启动完成后：
 
-前端注册入口默认关闭（保留注册 API），首次使用先建账号：
+| 入口 | 地址 | 说明 |
+|---|---|---|
+| 前端 | <http://127.0.0.1:3100> | 笔记、对话、知识库、图谱 |
+| 后端 API 文档 | <http://127.0.0.1:8100/docs> | Swagger，便于调试 |
+| 健康检查 | <http://127.0.0.1:8100/health/ready> | MySQL / Redis 就绪状态 |
+| Neo4j Browser | <http://127.0.0.1:17474> | 图谱与索引排查 |
+
+前端注册入口默认关闭，首次使用先建账号：
 
 ```bash
 curl -X POST http://127.0.0.1:8100/user/register/ \
@@ -195,60 +199,256 @@ curl -X POST http://127.0.0.1:8100/user/register/ \
   -d '{"username":"demo","email":"demo@example.com","password":"demo123456","confirm_password":"demo123456"}'
 ```
 
-### 方式二：本地开发（三进程）
+常用操作：
 
 ```bash
-docker compose up -d mysql redis neo4j   # 只起依赖
-./scripts/start-dev.sh                   # 后端 + Worker + 前端
+docker compose ps                 # 六个容器：mysql / redis / neo4j / backend / worker / front
+docker compose logs -f backend    # 查看后端日志
+docker compose restart backend    # 修改 .env 后重启后端
+docker compose down               # 停止（数据保留）
+docker compose down -v            # 停止并清空全部数据卷（慎用）
 ```
 
-也可以分别启动：
+> **模型密钥只从根目录 `.env` 注入**，不会打进镜像。Compose 会自动把 MySQL / Redis / Neo4j 的地址改成服务名，
+> 不需要也不应该把 `.env` 里的 host 改成容器名。未配置模型 Key 时页面可以打开，但对话与索引不可用。
+
+**数据持久化**：MySQL / Redis / Neo4j 使用 Docker 数据卷；上传文件、切片与日志使用独立卷。
+执行 `docker compose down -v` 会清空数据库，升级前先备份。
+
+### 本地开发（非 Docker）
+
+**环境要求**
+
+| 环境 | 版本 |
+|---|---|
+| Python | 3.12+ |
+| uv | 0.8+ |
+| Node.js | 20+ |
+| Docker | 仅用于 MySQL / Redis / Neo4j |
 
 ```bash
+git clone <your-repo-url> mindweave
+cd mindweave
+```
+
+**后端依赖**
+
+```bash
+cd backend
+uv sync --locked
+```
+
+**前端依赖**
+
+```bash
+cd front
+npm ci
+```
+
+**环境配置**
+
+复制根目录模板并填写：
+
+```bash
+cp .env.example .env
+```
+
+```dotenv
+# 对话模型（DeepSeek，OpenAI 兼容协议）
+DEEPSEEK_BASE_URL=https://api.deepseek.com
+DEEPSEEK_API_KEY=sk-xxx
+DEEPSEEK_API_KEY_BACKUP=
+DEEPSEEK_MODEL=deepseek-flash
+
+# Embedding（本地或 OpenAI 兼容服务）
+EMBEDDING_PROVIDER=remote
+EMBEDDING_MODEL=text-embedding-v4
+EMBEDDING_DIMENSIONS=512
+EMBEDDING_BASE_URL=https://your-compatible-endpoint/v1
+EMBEDDING_API_KEY=sk-xxx
+
+# 存储
+MYSQL_HOST=127.0.0.1
+MYSQL_PORT=13306
+MYSQL_USER=rag_learner
+MYSQL_PASSWORD=change_me
+MYSQL_DATABASE=mindweave
+REDIS_HOST=127.0.0.1
+REDIS_PORT=16379
+REDIS_DB=3
+NEO4J_URI=bolt://127.0.0.1:17687
+NEO4J_USER=neo4j
+NEO4J_PASSWORD=change_me
+```
+
+完整变量见 `.env.example`。
+
+**启动服务**
+
+```bash
+# 只起依赖
+docker compose up -d mysql redis neo4j
+
+# 一键起后端 + Worker + 前端
+./scripts/start-dev.sh
+
+# 或分别启动
 cd backend && uv run uvicorn main:app --reload --host 127.0.0.1 --port 8100
-cd backend && uv run python -m app.graph.worker        # 图谱任务必需
+cd backend && uv run python -m app.graph.worker
 cd front   && npm run dev -- --host 127.0.0.1 --port 3100
 ```
 
-| 服务 | 本机端口 |
+| 服务 | 地址 |
 |---|---|
-| 前端 / 后端 | 3100 / 8100 |
-| MySQL / Redis | 13306 / 16379 |
-| Neo4j Bolt / Browser | 17687 / 17474 |
+| 前端 | <http://127.0.0.1:3100> |
+| 后端 / API 文档 | <http://127.0.0.1:8100> / `/docs` |
+| MySQL / Redis | `127.0.0.1:13306` / `127.0.0.1:16379` |
+| Neo4j Bolt / Browser | `127.0.0.1:17687` / `127.0.0.1:17474` |
 
-> **只启动 API 与前端时，图谱任务会停在 `pending`**：向量与全文索引由 Worker 创建，检索会降级到 MySQL 字面匹配。
-> `/health/ready` 目前只检查 MySQL 与 Redis；图与索引的检查见 [Roadmap](#roadmap)。
+> 只启动 API 与前端时，图谱任务会停在 `pending`，检索会降级到 MySQL 字面匹配。
 
 ## 技术栈
 
-| 层 | 技术 |
+**后端**
+
+| 技术 | 说明 |
 |---|---|
-| 前端 | React 19 · TypeScript · Vite · Tailwind CSS · Zustand · Tiptap · React Markdown · AntV G6 |
-| 后端 | FastAPI · Pydantic v2 · SQLAlchemy 2（异步）· aiomysql · python-jose · httpx |
-| 存储 | MySQL 8（业务数据）· Neo4j 5.26（图谱 + 向量 + 全文）· Redis 7（令牌 / 限流 / 租约） |
-| 模型 | 任意 OpenAI 兼容接口：对话、Embedding、视觉；主备 API Key 自动切换 |
+| FastAPI | 异步 Web 框架，SSE 流式对话 |
+| Pydantic v2 | 请求 / 响应与工具参数校验 |
+| SQLAlchemy 2（异步） | MySQL ORM，显式事务 |
+| aiomysql | MySQL 异步驱动 |
+| Neo4j Driver | 图谱、向量索引与全文索引 |
+| Redis | 令牌黑名单、限流、会话租约、查询缓存 |
+| httpx | 模型、Embedding 与联网搜索 |
+
+**前端**
+
+| 技术 | 说明 |
+|---|---|
+| React 19 + TypeScript | 页面与类型安全 |
+| Vite | 开发服务器与生产构建 |
+| Tailwind CSS | 黑白设计系统的样式实现 |
+| Radix UI | 无头组件（对话框等） |
+| Tiptap | Markdown / 富文本编辑器 |
+| Zustand | 轻量状态管理 |
+| i18next | 中英文界面 |
+| React Router | 路由与登录守卫 |
+| react-markdown + rehype | Markdown 渲染与代码高亮 |
+| AntV G6 | 知识图谱画布 |
+
+**存储与模型**
+
+| 组件 | 用途 |
+|---|---|
+| MySQL 8 | 笔记、文档、会话、审批、任务与 trace |
+| Neo4j 5.26 | 实体关系、Chunk 向量索引与全文索引 |
+| Redis 7 | 令牌、限流、租约、Embedding 缓存 |
+| DeepSeek | 对话、工具调用、重排与摘要 |
+| Embedding 服务 | 本地 bge 或任意 OpenAI 兼容向量接口 |
+
+## 项目结构
+
+```text
+MindWeave/
+├── backend/
+│   ├── app/
+│   │   ├── agent/          # 原生工具循环、审批、租约、run store
+│   │   ├── core/           # 配置、限流、trace、生命周期
+│   │   ├── db/             # MySQL / Redis 连接与增量迁移
+│   │   ├── graph/          # 实体抽取、图谱写入、任务 Worker、图谱 API
+│   │   ├── models/         # SQLAlchemy 模型
+│   │   ├── prompt/         # 循环、重排、摘要、抽取提示词
+│   │   ├── rag/            # 检索、融合、重排、证据预算、联网
+│   │   ├── router/         # 账号 / 笔记 / 知识库 / 对话 / 图谱 / 健康
+│   │   ├── schemas/        # Pydantic 模型
+│   │   └── services/       # 业务服务、模型客户端、记忆、用量
+│   ├── scripts/            # 重建索引、导入语料
+│   ├── tests/              # 契约与单元测试
+│   ├── Dockerfile
+│   └── main.py
+├── front/
+│   ├── src/
+│   │   ├── api/            # 请求层
+│   │   ├── components/     # 通用 / 图谱 / 笔记 / 布局组件
+│   │   ├── hooks/          # SSE、图谱事件
+│   │   ├── pages/          # 笔记、对话、知识库、图谱、用量、设置
+│   │   ├── router/         # 路由
+│   │   ├── stores/         # Zustand
+│   │   └── i18n/           # 中英文
+│   ├── Dockerfile
+│   └── nginx.conf
+├── eval/                   # 60 条回归集：seed / validate / retrieval / e2e
+├── skills/                 # 只读技能说明（load_skill / MCP）
+├── mcp_server/             # stdio MCP 服务
+├── scripts/                # 启动、种子数据、指标报表
+├── docs/
+│   ├── design-system.md
+│   ├── AI-Agent功能全景说明.md
+│   └── rebuild-guide/      # 70 篇复刻教程
+├── demo-docs/              # 演示语料
+├── docker-compose.yml      # 六容器编排
+└── .env.example
+```
+
+## API 文档
+
+启动后访问 Swagger：
+
+- Docker：<http://127.0.0.1:8100/docs>
+- 本地：<http://127.0.0.1:8100/docs>
+
+常用接口：
+
+| 能力 | 方法 | 路径 |
+|---|---|---|
+| 注册 / 登录 | POST | `/user/register/`、`/user/login/` |
+| 笔记 | GET/POST | `/note/list`、`/note/create` |
+| 知识库 | POST/GET | `/knowledge/add/single`、`/knowledge/list` |
+| 流式对话 | POST | `/chat/agent/query/stream` |
+| 审批恢复 | POST | `/chat/agent/resume` |
+| 图谱总览 | GET | `/api/graph/overview` |
+| 用量统计 | GET | `/chat/usage` |
+| 健康检查 | GET | `/health/ready` |
+
+对话接口使用 SSE，事件包括 `thinking`、`response`、`interrupt`、`error`、`done`。
 
 ## 配置说明
 
-配置集中在**仓库根目录的 `.env`**（不是 `backend/.env`），模板见 [.env.example](./.env.example)；密钥已被 `.gitignore` 排除。
+### 切换对话模型
 
-| 分组 | 变量 | 说明 |
-|---|---|---|
-| 运行 | `ENV` / `LOG_LEVEL` | `dev` / `test` / `prod`；日志级别 |
-| MySQL | `MYSQL_HOST` `MYSQL_PORT` `MYSQL_USER` `MYSQL_PASSWORD` `MYSQL_DATABASE` | 宿主机默认 `127.0.0.1:13306` |
-| Redis | `REDIS_HOST` `REDIS_PORT` `REDIS_DB` | 宿主机默认 `127.0.0.1:16379` |
-| Neo4j | `NEO4J_URI` `NEO4J_USER` `NEO4J_PASSWORD` | 留空则图功能不可用，API 仍可启动 |
-| 对话模型 | `DEEPSEEK_BASE_URL` `DEEPSEEK_API_KEY` `DEEPSEEK_API_KEY_BACKUP` `DEEPSEEK_MODEL` | 主备密钥，指定错误码自动切换 |
-| Embedding | `EMBEDDING_PROVIDER` `EMBEDDING_MODEL` `EMBEDDING_DIMENSIONS` `EMBEDDING_BASE_URL` `EMBEDDING_API_KEY` | `local` 才加载 PyTorch；维度必须与现有索引一致 |
-| 缓存 / 全文 | `EMBEDDING_CACHE_ENABLED` `EMBEDDING_CACHE_TTL` `RAG_FULLTEXT_ANALYZER` | 查询向量缓存 7 天；全文分析器默认 `cjk` |
-| Agent | `AGENT_MAX_STEPS` `AGENT_INPUT_BYTES` `AGENT_OUTPUT_TOKENS` | 默认 10 轮 / 60 KB 输入 / 2048 输出 |
-| 检索 | `RAG_RECALL_LIMIT` `RAG_RERANK_LIMIT` `RAG_FINAL_LIMIT` `RAG_CONTEXT_CHARS` `RAG_VECTOR_QUOTA` `RAG_FULLTEXT_QUOTA` `RAG_VECTOR_OVERFETCH` | 召回 30 / 重排 20 / 最终 6 / 证据 8000 字符；双路各 20 条配额，向量过采样 1000 |
-| 视觉 | `VISION_BATCH_SIZE` `VISION_MAX_PAGES` `VISION_DEDUP_ENABLED` | PDF 页面视觉批处理 |
-| 联网 | `WEB_SEARCH_ENABLED` `WEB_SEARCH_PROVIDER` `WEB_SEARCH_API_KEY` | 默认关闭 |
-| 限流 | `RATE_LIMIT_ENABLED` `RATE_LIMIT_CHAT_PER_MINUTE` `RATE_LIMIT_UPLOAD_PER_MINUTE` | 固定窗口，按 scope + 客户端地址 |
+所有模型调用走 OpenAI 兼容协议，改三个变量即可切换服务商：
 
-**换 Embedding 模型时**：维度变化会让已有向量索引不可用（启动会显式报错，而不是静默算错）。
-需要先重建：`uv run python -m scripts.requeue_rag_index --username <name>`，或清空 Neo4j 中的 `Chunk` 节点后重新导入。
+```dotenv
+DEEPSEEK_BASE_URL=https://api.deepseek.com
+DEEPSEEK_API_KEY=sk-xxx
+DEEPSEEK_MODEL=deepseek-flash
+```
+
+主 Key 返回 402 / 401 / 429 / 5xx 时会自动尝试 `DEEPSEEK_API_KEY_BACKUP`。
+
+### Embedding
+
+```dotenv
+EMBEDDING_PROVIDER=remote        # local 则加载本地 sentence-transformers
+EMBEDDING_MODEL=text-embedding-v4
+EMBEDDING_DIMENSIONS=512
+EMBEDDING_BASE_URL=https://your-endpoint/v1
+EMBEDDING_API_KEY=sk-xxx
+```
+
+**换模型或维度会与已有向量索引不兼容**，启动会显式报错而不是静默算错。重建方式：
+
+```bash
+cd backend
+uv run python -m scripts.requeue_rag_index --username <name>
+```
+
+也可以清空 Neo4j 中的 `Chunk` 节点后重新导入。
+
+### 存储与限流
+
+Compose 会自动覆盖 `MYSQL_HOST`、`REDIS_HOST`、`NEO4J_URI` 为服务名；本地开发才使用 `127.0.0.1` 与映射端口。
+`RATE_LIMIT_*` 控制聊天与上传频率，`WEB_SEARCH_*` 控制联网兜底，默认关闭。
 
 ## 与上游的差异
 
@@ -257,13 +457,11 @@ cd front   && npm run dev -- --host 127.0.0.1 --port 3100
 | 对话编排 | LangChain `create_agent` + 固定工作流 | **原生 `tool_calls` 循环**，工具结果回到同一消息链 | 让模型自己决定检索几次，每轮预算可控 |
 | 上下文 | 截断历史 | **字节预算 → 工具结果归档 → 结构化摘要 → 按页读回** | 长对话不丢证据，且丢的内容可追溯 |
 | 检索融合 | RRF 后按分数排序 | **RRF 融合名次 + 模型分级重排**，最终证据按来源限额选取 | 不同检索器量纲不同，直接比大小会丢掉图谱证据 |
-| 切分 | 定长切分 | **结构化切片**：标题层级 + 段落 + 代码围栏 | 召回片段自带上下文，减少"半句话" |
-| 重排 | 云端 rerank API | **模型分级重排 + 邻居扩展**，失败回退原序 | 少一个外部依赖；分级比分数更稳 |
-| 观测 | 普通日志 | **请求级 trace**：span 耗时、token 用量、工具序列 | 出问题能定位到某一层，而不是只看到 500 |
-| 界面 | 上游默认视觉 | **黑白单色设计系统**：自有品牌标记、空状态插图、明暗双主题 | 让工具像成品，而不是脚手架 |
-| 评测 | 无 | **仓库内 60 条回归集**（检索 / 引用 / 拒答）+ 离线对比实验 | 改动需要能被量化 |
-
-Compose 项目名与数据库名统一为 `mindweave`；首次启动会创建空数据卷，升级时先备份再迁移。
+| 切分 | 定长切分 | **结构化切片 + 父子块** | 召回片段自带上下文，减少"半句话" |
+| 重排 | 云端 rerank API | **模型分级重排 + 父块/邻居回填**，失败回退原序 | 少一个外部依赖；分级比分数更稳 |
+| 观测 | 普通日志 | **请求级 trace**：span 耗时、token 用量、工具序列 | 出问题能定位到某一层 |
+| 界面 | 上游默认视觉 | **黑白单色设计系统** | 让工具像成品 |
+| 评测 | 无 | **60 条回归集 + 离线对比实验** | 改动需要能被量化 |
 
 ## 工程化改造（2026-10）
 
@@ -271,17 +469,17 @@ Compose 项目名与数据库名统一为 `mindweave`；首次启动会创建空
 
 | 改造 | 之前 | 现在 | 代码 |
 |---|---|---|---|
-| 多路融合 | 两路名次分直接相加，单路可能挤掉另一路 | RRF 名次 + 每路配额 + 同 chunk 去重 | `backend/app/rag/fusion.py` |
-| 中文全文 | 查询里的 `+ ( ) " ~ *` 会让解析失败，整链降级 MySQL | Lucene 转义 + `cjk` 分析器 + 过采样 | `hybrid_retrieval.py` / `neo4j_client.py` |
-| 成本观测 | 只有日志，答不出"一次问答多少钱" | `request.usage` 每次必发（失败记零用量）+ P50/P95/成本/中止率报表 | `deepseek_client.py` / `scripts/metrics_report.py` |
-| 稳定性 | 循环到上限、重复工具、上下文超限 → 500 | 统一 `agent.loop_stopped` + 部分答案 | `agent/chat_loop.py` |
-| 查询缓存 | 同一个问题重复 embedding、重复计费 | Redis 缓存查询向量（7 天；索引写入不缓存） | `rag/embedding.py` |
-| 父子块 | 命中子块后只能取相邻片段 | 子块召回 + 父块回填（同章节合并，超长强制切组） | `structured_chunks.py` / `evidence_selection.py` |
-| 长期记忆 | 只有会话内摘要 | `remember` 走审批写入 `user_memories`，下一轮注入 system | `user_memory.py` / `user_context.py` |
-| 技能 / MCP | 无 | `load_skill` 只读加载；stdio MCP 服务暴露 list/read skills | `skills/` / `mcp_server/server.py` |
-| 评测 | 无 | 60 条仓库内回归集：Recall@3 0.96、引用捏造 0、拒答 10/10 | `eval/` |
+| 多路融合 | 两路名次分直接相加 | RRF 名次 + 每路配额 + 同 chunk 去重 | `backend/app/rag/fusion.py` |
+| 中文全文 | 特殊字符会让解析失败 | Lucene 转义 + `cjk` 分析器 + 过采样 | `hybrid_retrieval.py` |
+| 成本观测 | 只有日志 | `request.usage` + P50/P95 报表 | `scripts/metrics_report.py` |
+| 稳定性 | 超限即 500 | `agent.loop_stopped` + 部分答案 | `agent/chat_loop.py` |
+| 查询缓存 | 重复 embedding | Redis 缓存查询向量（7 天） | `rag/embedding.py` |
+| 父子块 | 只能取相邻片段 | 子块召回 + 父块回填 | `structured_chunks.py` |
+| 长期记忆 | 只有会话摘要 | `remember` 审批写入 + 偏好总结 | `user_memory.py` |
+| 技能 / MCP | 无 | `load_skill` + stdio MCP | `skills/` / `mcp_server/` |
+| 评测 | 无 | 60 条回归集 + 引用/拒答检查 | `eval/` |
 
-配套测试：`cd backend && uv run python -m unittest discover -s tests`，**133 项全绿**。
+测试：`cd backend && uv run python -m unittest discover -s tests`，**133 项全绿**。
 
 ## 能力边界
 
@@ -291,81 +489,23 @@ Compose 项目名与数据库名统一为 `mindweave`；首次启动会创建空
 |---|---|
 | 每个回答都逐 token 输出 | 最终答案整段返回；写作辅助接口另有文本流 |
 | Agent 能调用全部后端接口 | 只注册了 13 个工具，写操作需要审批 |
-| 这是多 Agent 系统 | 单个模型 + 工具循环，没有 Planner/Worker 分工与委派 |
-| 有跨会话长期记忆 | 有，但只存用户显式确认的内容（`remember` 审批），不会自动抽取 |
+| 这是多 Agent 系统 | 单个模型 + 工具循环，没有 Planner/Worker 分工 |
+| 有跨会话长期记忆 | 有，但只存用户显式确认的内容，不会自动抽取 |
 | 图谱能多跳推理 | 当前是实体名匹配 + 提及反查，不是路径规划 |
-| 上传长文后整本都能被检索 | 切片全量入库，但向量索引受 Embedding 模型输入上限约束（当前 900 字符/块） |
+| 上传长文后整本都能被检索 | 切片全量入库，但向量索引受 Embedding 输入上限约束 |
 | 图谱与笔记实时一致 | Worker 异步构建，存在延迟与失败重试 |
-| 外部检索都有可点击原文链接 | 保留来源标题与摘要，未完整保留原 URL 契约 |
-| 所有图谱编辑都有界面 | 后端接口齐全，前端主要接通展示、搜索、详情与删除 |
+| 多租户隔离已完善 | 业务层按 `user_id` 隔离；向量检索仍是全局索引 + 后置过滤 |
 | 生产级可用性 | 单机 Docker 编排，没有压测、灰度与多副本验证 |
-| 多租户隔离已完善 | 业务层按 `user_id` 隔离；向量检索仍是全局索引 + 后置过滤，已加过采样缓解，但用户量大时仍会稀释召回 |
-| 主链路已完全不用 LangGraph | 主入口走原生工具循环；`agent/workflow.py` 与 checkpoint 表仍在，供旧路径兼容 |
-| 切片长度适配所有 Embedding 模型 | 当前 900 字符/块；本地 `bge-small-zh` 上限 512 token，超出部分会被静默截断 |
-
-## 项目结构
-
-```text
-mindweave/
-├── backend/
-│   ├── app/
-│   │   ├── agent/          # 工具循环、工具适配、审批状态机、会话租约
-│   │   ├── core/           # 配置、响应封装、限流、日志、trace、生命周期
-│   │   ├── db/             # MySQL / Redis 连接与建表迁移
-│   │   ├── graph/          # 实体抽取、图谱写入、任务队列与 Worker
-│   │   ├── models/         # SQLAlchemy 模型（笔记/文档/会话/任务/审批/trace）
-│   │   ├── prompt/         # 提示词（循环策略、规划、重排、可答性、摘要、抽取）
-│   │   ├── rag/            # 向量、全文、融合、重排、证据预算、联网兜底
-│   │   ├── router/         # HTTP 路由（账号/笔记/模板/回顾/知识库/聊天/图谱/健康）
-│   │   ├── schemas/        # Pydantic 请求与响应模型
-│   │   ├── services/       # 业务服务（笔记/文档/回顾/会话/上下文/模型客户端）
-│   │   └── utils/          # JWT 与鉴权工具
-│   ├── scripts/            # 重建索引入口
-│   ├── tests/              # 契约与单元测试（不依赖外部服务）
-│   ├── Dockerfile
-│   └── main.py
-├── front/                  # React 19 + Vite + Tailwind（沿用上游，重做视觉）
-├── docs/                   # 功能全景、设计系统、视觉资产、环境记录
-├── eval/                   # 仓库内评测：seed / validate / retrieval / e2e / report
-├── skills/                 # 只读技能说明（供 load_skill 与 MCP 读取）
-├── mcp_server/             # 最小 stdio MCP 服务（技能只读）
-├── scripts/start-dev.sh    # 一键起三进程（API / Worker / 前端）
-├── docker-compose.yml      # 六容器编排
-├── .env.example
-└── README.md
-```
-
-## 开发与测试
-
-```bash
-cd backend
-uv sync --locked                 # 安装依赖
-uv run uvicorn main:app --reload --host 127.0.0.1 --port 8100
-uv run python -m unittest discover -s tests -v     # 契约与单元测试（无需外部服务）
-
-cd front
-npm ci
-npm run dev -- --host 127.0.0.1 --port 3100
-npm run build                    # tsc + vite 生产构建
-```
-
-约定：
-
-- 数据库写入在服务层显式提交，路由只负责参数与响应；跨 MySQL / Neo4j / Redis **没有**分布式事务。
-- 派生数据（向量、图谱）失败可重放，业务数据（笔记、文档）以 MySQL 为准。
-- 出错时优先降级并留痕，不静默兜底成"看起来正常"。
 
 ## 设计系统
 
 界面只有一条明度轴：不出现任何色相。强调色在浅色下是墨黑、深色下是纸白，
-强调块上的文字统一用 `--color-accent-contrast` 自动反相；配色集中在 `front/src/index.css` 的 CSS 变量里，组件不写具体色值。
+强调块上的文字统一用 `--color-accent-contrast` 自动反相；配色集中在 `front/src/index.css` 的 CSS 变量里。
 
 - 层级靠灰阶、间距与 1px 发丝线，不靠阴影；
 - 圆角收到 2/4/6px，只有标签、头像、开关保留全圆角；
-- 语义（成功 / 错误）用深浅与文案表达，不用红绿黄；
-- 两套主题共用一份深底 + 灰阶高亮的代码块；支持 `prefers-reduced-motion`。
-
-令牌表与对比度数据见 [设计系统](docs/design-system.md)；新增 Logo、插图或图片的提示词与后处理见 [视觉资产清单](docs/visual-assets.md)。
+- 语义用深浅与文案表达，不用红绿黄；
+- 支持 `prefers-reduced-motion`。
 
 <p align="center">
   <img src="docs/images/design-board-light.png" width="49%" alt="浅色设计板">
@@ -377,8 +517,8 @@ npm run build                    # tsc + vite 生产构建
 仓库内置一套轻量评测，用于回归而不是宣称绝对分数：
 
 ```bash
-uv run --project backend python eval/seed.py        # demo-docs + 设计文档冲洗评测语料
-uv run --project backend python eval/run.py         # validate → retrieval → e2e
+uv run --project backend python eval/seed.py
+uv run --project backend python eval/run.py
 ```
 
 | 指标（60 条：50 可答 + 10 不可答） | 结果 |
@@ -388,57 +528,37 @@ uv run --project backend python eval/run.py         # validate → retrieval →
 | 引用捏造 | 0 |
 | 拒答正确率 | 10/10 |
 
-报告见 `eval/results/report.md`。另外做过一轮 120 条股票课程语料的离线对比（80 调参 / 40 测试），
-实验数据与结论没有随仓库发布。
-
-工程侧检查项：
-
-| 检查 | 命令 | 期望 |
-|---|---|---|
-| 单元与契约测试 | `cd backend && uv run python -m unittest discover -s tests` | 133 项全绿 |
-| 前端构建 | `cd front && npm run build` | 无类型错误 |
-| 健康检查 | `curl -s 127.0.0.1:8100/health/ready` | MySQL / Redis 正常 |
-| 容器编排 | `docker compose config -q` | 无错误 |
-| 成本与延迟 | `uv run --project backend python scripts/metrics_report.py --days 7` | P50/P95、token、成本、中止率 |
+报告见 `eval/results/report.md`。另外做过一轮 120 条股票课程语料的离线对比，实验数据未随仓库发布。
 
 ## 故障排查
 
 | 现象 | 排查 |
 |---|---|
 | 问答报"模型服务未配置" | 检查根目录 `.env` 的 `DEEPSEEK_API_KEY`，改完重启后端 |
-| 上传成功但搜不到 | Worker 是否在跑；`graph_tasks` 是否有 `pending`；`/health/ready` |
-| 检索结果明显变差 | 向量维度是否与 `EMBEDDING_DIMENSIONS` 一致；全文索引是否缺失（会降级到 MySQL） |
-| 启动报"已有向量索引维度不同" | 换过 Embedding 模型，按[配置说明](#配置说明)重建索引 |
-| 同一会话提示"正在处理上一条请求" | 上一次请求的 Redis 租约未释放（TTL 240 秒），或前端重复提交 |
-| Neo4j Browser 打不开 | 端口是 `17474`，不是默认的 `7474` |
-| 想彻底重置数据 | `docker compose down -v`（会清空数据卷，慎用） |
+| 主 Key 报 402 / 401 | 配置 `DEEPSEEK_API_KEY_BACKUP`，客户端会自动切换 |
+| 上传成功但搜不到 | Worker 是否运行；`graph_tasks` 是否有 `pending`；`/health/ready` |
+| 检索结果明显变差 | 向量维度是否与 `EMBEDDING_DIMENSIONS` 一致；全文索引是否缺失 |
+| 启动报"已有向量索引维度不同" | 换过 Embedding 模型，按配置说明重建索引 |
+| 同一会话提示"正在处理上一条请求" | Redis 租约未释放（TTL 240 秒），或前端重复提交 |
+| Neo4j Browser 打不开 | 端口是 `17474`，不是 `7474` |
+| 想彻底重置数据 | `docker compose down -v`（会清空数据卷） |
 
 ## Roadmap
 
 **已完成**
 
-- [x] 黑白单色设计系统与品牌资产（标记 / 空状态插图 / App Icon / OG）
-- [x] 界面精修：笔记、知识库、对话、模板页、侧边栏与动效
-- [x] 请求级 trace 与按会话回查
-- [x] **候选融合**：按来源配额合并、同 chunk 去重、Lucene 转义（`rag/fusion.py`）
-- [x] **中文全文**：CJK 分析器 + 查询转义 + 过采样配置
-- [x] **成本观测**：`request.usage` 事件与 `metrics_report.py`
-- [x] **循环降级**：上限/重复工具/上下文超限返回部分答案
-- [x] **评测体系**：120 条离线集 + 80/40 拆分 + AutoRAG 三组对比
-
-**已完成（续）**
-
-- [x] **父子块**：`parent_id` / `parent_text` 列 + 子块召回 + 父块回填
-- [x] **跨会话记忆**：`remember` 审批后写入，下一轮注入 system
-- [x] **技能**：`skills/` + `load_skill` 只读加载
-- [x] **MCP**：stdio 服务，暴露 `list_skills` / `read_skill`
-- [x] **仓库内 eval harness**：`eval.validate / retrieval / e2e` 三个 CLI
+- [x] 黑白单色设计系统与品牌资产
+- [x] 原生工具循环、审批状态机、上下文压缩与归档
+- [x] 混合检索、融合配额、中文全文与父子块
+- [x] 请求级 trace、用量统计与成本报表
+- [x] 长期记忆、技能加载与 stdio MCP
+- [x] 60 条回归评测与 70 篇复刻教程
 
 **计划中**
 
-- [ ] **真流式输出**：逐 token 推送与 TTFT（当前最终答案仍整段返回）
-- [ ] **健康检查补全**：把 Neo4j 与索引存在性纳入 `/health/ready`
-- [ ] **多租户向量检索**：带元数据过滤的向量索引，替代全局索引后置过滤
+- [ ] 真流式输出：逐 token 推送与 TTFT
+- [ ] 健康检查覆盖 Neo4j 与索引存在性
+- [ ] 带元数据过滤的向量索引，替代全局索引后置过滤
 
 ## 文档
 
