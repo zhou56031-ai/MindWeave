@@ -1,0 +1,597 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;600;700&family=Noto+Serif+SC:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+  --font-heading: 'Noto Serif SC', 'Songti SC', serif;
+  --font-body: 'Noto Sans SC', 'PingFang SC', 'SF Pro Display', 'Helvetica Neue', sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', 'Consolas', monospace;
+
+  /* ==== 黑白主题：只有同一条明度轴上的灰阶，没有任何色相 ==== */
+  --color-bg: #F2F2F2;             /* 画布 */
+  --color-bg-secondary: #E9E9E9;   /* 悬停 / 次级块 */
+  --color-bg-tertiary: #DEDEDE;    /* 更深的底，用于开关轨道、选中底 */
+  --color-card: #FFFFFF;           /* 卡片与浮层 */
+  --color-card-hover: #F7F7F7;
+  --color-text: #0A0A0A;
+  --color-text-secondary: #5A5A5A;
+  --color-text-tertiary: #828282;
+  --color-text-placeholder: #B8B8B8;
+  --color-border: #D6D6D6;
+  --color-border-light: #E8E8E8;
+  --color-divider: #E4E4E4;
+
+  /* 强调 = 墨色：浅色下黑底白字，深色下白底黑字 */
+  --color-accent: #0A0A0A;
+  --color-accent-hover: #2B2B2B;
+  --color-accent-bg: #E6E6E6;
+  --color-accent-contrast: #FFFFFF;
+
+  /* 语义色也用灰阶：靠深浅与文字表达轻重，不靠红绿黄 */
+  --color-success: #444444;
+  --color-success-bg: #ECECEC;
+  --color-danger: #0A0A0A;
+  --color-danger-bg: #D2D2D2;
+  --color-warning: #5A5A5A;
+  --color-warning-bg: #F0F0F0;
+
+  --color-shadow: rgba(0, 0, 0, 0.05);
+  --color-focus: #0A0A0A;
+  --color-code-bg: #0B0B0B;
+  --color-code-border: #242424;
+  --color-code-text: #F2F2F2;
+
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 6px;
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 32px;
+  --space-2xl: 48px;
+  --space-3xl: 64px;
+  --line-height-tight: 1.3;
+  --line-height-normal: 1.6;
+  --line-height-loose: 1.8;
+}
+
+.dark {
+  color-scheme: dark;
+  --color-bg: #0A0A0A;
+  --color-bg-secondary: #151515;
+  --color-bg-tertiary: #1F1F1F;
+  --color-card: #101010;
+  --color-card-hover: #181818;
+  --color-text: #F7F7F7;
+  --color-text-secondary: #A6A6A6;
+  --color-text-tertiary: #7A7A7A;
+  --color-text-placeholder: #4D4D4D;
+  --color-border: #2E2E2E;
+  --color-border-light: #232323;
+  --color-divider: #232323;
+
+  --color-accent: #F7F7F7;
+  --color-accent-hover: #DCDCDC;
+  --color-accent-bg: #1F1F1F;
+  --color-accent-contrast: #0A0A0A;
+
+  --color-success: #C4C4C4;
+  --color-success-bg: #1A1A1A;
+  --color-danger: #FAFAFA;
+  --color-danger-bg: #333333;
+  --color-warning: #A8A8A8;
+  --color-warning-bg: #1E1E1E;
+
+  --color-shadow: rgba(0, 0, 0, 0.5);
+  --color-focus: #F7F7F7;
+  --color-code-bg: #111111;
+  --color-code-border: #262626;
+  --color-code-text: #F2F2F2;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  line-height: var(--line-height-normal);
+  color: var(--color-text);
+  background-color: var(--color-bg);
+}
+
+#root {
+  min-height: 100vh;
+}
+
+/* 统一的过渡节奏：只动颜色、边框与 0.5px 位移，不做弹跳 */
+@keyframes page-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* 路由切换时页面淡入（只动透明度，避免 transform 破坏 sticky 定位） */
+main > * {
+  animation: page-in 200ms cubic-bezier(0.2, 0, 0, 1) both;
+}
+
+button:not(:disabled) {
+  transition: color 0.15s ease, background-color 0.15s ease,
+    border-color 0.15s ease, opacity 0.15s ease, transform 0.1s ease;
+}
+
+button:not(:disabled):active {
+  transform: translateY(0.5px);
+}
+
+a {
+  text-underline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  main > * { animation: none; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* 选中文本直接反相：黑白主题里最强的强调 */
+::selection {
+  background: var(--color-text);
+  color: var(--color-bg);
+}
+
+/* 键盘焦点统一成一条细发丝线，不用彩色 ring */
+:focus-visible {
+  outline: 1.5px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+/* 输入类控件跟随主题，避免原生控件带蓝色 */
+input, textarea, select, button {
+  accent-color: var(--color-accent);
+}
+
+/* 载入转圈：轨道 30% 前景色。用 color-mix 而不是 Tailwind 的 /30，
+   因为任意值 + 透明度修饰符在 CSS 变量上不可靠。 */
+.spinner-mono {
+  border-width: 2px;
+  border-style: solid;
+  border-color: color-mix(in srgb, var(--color-accent-contrast) 30%, transparent);
+  border-top-color: var(--color-accent-contrast);
+}
+
+/* 极淡织格：用于登录页等大面积留白，边缘用径向遮罩淡出，避免像壁纸 */
+.grid-backdrop {
+  background-image:
+    linear-gradient(to right, color-mix(in srgb, var(--color-text) 5%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in srgb, var(--color-text) 5%, transparent) 1px, transparent 1px);
+  background-size: 32px 32px;
+  -webkit-mask-image: radial-gradient(ellipse 72% 62% at 50% 46%, #000 28%, transparent 76%);
+  mask-image: radial-gradient(ellipse 72% 62% at 50% 46%, #000 28%, transparent 76%);
+}
+
+/* 空状态插图：纯黑线稿，深色主题整体反相 */
+.empty-illustration {
+  opacity: 0.9;
+}
+.dark .empty-illustration {
+  filter: invert(1);
+}
+
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--color-text-tertiary); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--color-text-secondary); }
+
+/* ==== Tiptap Editor overrides ==== */
+
+.tiptap-wrapper {
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.tiptap-wrapper .ProseMirror {
+  padding: 1.25rem 0 8rem;
+  min-height: 300px;
+  font-size: 16px;
+  line-height: 1.8;
+  outline: none !important;
+}
+
+/* 内联补全幽灵文本：与正文保持一致的字体指标，避免与用户输入错位/重叠 */
+.tiptap-wrapper .ghost-completion {
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.8;
+}
+
+.tiptap-wrapper .ProseMirror h1 {
+  font-size: 1.75rem;
+  font-weight: 700;
+  font-family: var(--font-heading);
+  line-height: 1.3;
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+}
+.tiptap-wrapper .ProseMirror h2 {
+  font-size: 1.4rem;
+  font-weight: 600;
+  font-family: var(--font-heading);
+  line-height: 1.3;
+  margin-top: 1.3em;
+  margin-bottom: 0.4em;
+}
+.tiptap-wrapper .ProseMirror h3 {
+  font-size: 1.15rem;
+  font-weight: 600;
+  font-family: var(--font-heading);
+  line-height: 1.3;
+  margin-top: 1.2em;
+  margin-bottom: 0.3em;
+}
+.tiptap-wrapper .ProseMirror h4 {
+  font-size: 1.05rem;
+  font-weight: 600;
+  font-family: var(--font-heading);
+  line-height: 1.3;
+  margin-top: 1.1em;
+  margin-bottom: 0.3em;
+}
+.tiptap-wrapper .ProseMirror h5,
+.tiptap-wrapper .ProseMirror h6 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  margin-top: 1em;
+  margin-bottom: 0.2em;
+}
+
+.tiptap-wrapper .ProseMirror p {
+  margin: 0.6em 0;
+}
+
+.tiptap-wrapper .ProseMirror blockquote {
+  border-left: 3px solid var(--color-accent);
+  padding-left: 1em;
+  color: var(--color-text-secondary);
+  margin: 1em 0;
+}
+
+.tiptap-wrapper .ProseMirror code {
+  font-family: var(--font-mono);
+  font-size: 0.88em;
+  background: var(--color-bg-secondary);
+  padding: 0.15em 0.4em;
+  border-radius: 4px;
+}
+
+.tiptap-wrapper .ProseMirror pre {
+  background: var(--color-bg-secondary);
+  border-radius: 8px;
+  padding: 1em 1.25em;
+  overflow-x: auto;
+  margin: 1em 0;
+}
+
+.tiptap-wrapper .ProseMirror pre code {
+  background: none;
+  padding: 0;
+  font-size: 0.88em;
+}
+
+/* Placeholder */
+.tiptap-wrapper .ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  color: var(--color-text-placeholder);
+  pointer-events: none;
+  float: left;
+  height: 0;
+}
+
+/* Tables */
+.tiptap-wrapper .ProseMirror table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1em 0;
+  overflow: hidden;
+}
+.tiptap-wrapper .ProseMirror th,
+.tiptap-wrapper .ProseMirror td {
+  border: 1px solid var(--color-border);
+  padding: 0.5em 0.75em;
+  text-align: left;
+  vertical-align: top;
+  min-width: 60px;
+}
+.tiptap-wrapper .ProseMirror th {
+  background: var(--color-bg-secondary);
+  font-weight: 600;
+}
+.tiptap-wrapper .ProseMirror td {
+  background: var(--color-card);
+}
+
+/* Table resize handles */
+.tiptap-wrapper .ProseMirror .tableWrapper {
+  overflow-x: auto;
+}
+.tiptap-wrapper .ProseMirror .column-resize-handle {
+  position: absolute;
+  right: -2px;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  cursor: col-resize;
+  background: var(--color-accent);
+}
+
+/* Selected cell */
+.tiptap-wrapper .ProseMirror .selectedCell {
+  background: var(--color-accent-bg);
+}
+
+/* Tiptap lists with Tailwind preflight override */
+.tiptap-wrapper .ProseMirror ul,
+.tiptap-wrapper .ProseMirror ol {
+  padding-left: 1.5em;
+}
+.tiptap-wrapper .ProseMirror ul {
+  list-style-type: disc;
+}
+.tiptap-wrapper .ProseMirror ol {
+  list-style-type: decimal;
+}
+.tiptap-wrapper .ProseMirror li {
+  margin: 0.25em 0;
+}
+
+/* Task list */
+.tiptap-wrapper .ProseMirror ul[data-type="taskList"] {
+  list-style: none;
+  padding-left: 0;
+}
+.tiptap-wrapper .ProseMirror ul[data-type="taskList"] li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5em;
+}
+.tiptap-wrapper .ProseMirror ul[data-type="taskList"] li > label {
+  flex-shrink: 0;
+  margin-top: 0.35em;
+}
+.tiptap-wrapper .ProseMirror ul[data-type="taskList"] li > label input[type="checkbox"] {
+  cursor: pointer;
+  accent-color: var(--color-accent);
+}
+.tiptap-wrapper .ProseMirror ul[data-type="taskList"] li > div {
+  flex: 1;
+}
+
+/* Images */
+.tiptap-wrapper .ProseMirror img {
+  max-width: 100%;
+  height: auto;
+  border-radius: var(--radius-md);
+}
+
+/* Links */
+.tiptap-wrapper .ProseMirror a {
+  color: var(--color-accent);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* Horizontal rule */
+.tiptap-wrapper .ProseMirror hr {
+  border: none;
+  border-top: 1px solid var(--color-border);
+  margin: 1.5em 0;
+}
+
+/* Editor code block */
+.tiptap-wrapper .ProseMirror pre {
+  background: var(--color-code-bg);
+  border: 1px solid var(--color-code-border);
+  border-radius: var(--radius-md);
+  padding: 1em 1.2em;
+  margin: 1em 0;
+  overflow-x: auto;
+  position: relative;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--color-code-text);
+}
+.tiptap-wrapper .ProseMirror pre code {
+  color: inherit;
+}
+.tiptap-wrapper .ProseMirror pre .hljs {
+  background: transparent;
+}
+.tiptap-wrapper .ProseMirror pre::before {
+  content: attr(data-language);
+  position: absolute;
+  top: 6px;
+  right: 10px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #7A7A7A;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-family: inherit;
+}
+
+/* Syntax highlighting — 编辑器代码块：只用灰阶，靠字重与深浅分层 */
+.tiptap-wrapper .ProseMirror pre .hljs-keyword,
+.tiptap-wrapper .ProseMirror pre .hljs-selector-tag,
+.tiptap-wrapper .ProseMirror pre .hljs-type    { color: #FFFFFF; font-weight: 600; }
+.tiptap-wrapper .ProseMirror pre .hljs-literal { color: #E6E6E6; }
+.tiptap-wrapper .ProseMirror pre .hljs-string,
+.tiptap-wrapper .ProseMirror pre .hljs-addition,
+.tiptap-wrapper .ProseMirror pre .hljs-regexp  { color: #C9C9C9; }
+.tiptap-wrapper .ProseMirror pre .hljs-number  { color: #E6E6E6; }
+.tiptap-wrapper .ProseMirror pre .hljs-comment { color: #7A7A7A; font-style: italic; }
+.tiptap-wrapper .ProseMirror pre .hljs-built_in,
+.tiptap-wrapper .ProseMirror pre .hljs-title,
+.tiptap-wrapper .ProseMirror pre .hljs-title.class_ { color: #FFFFFF; }
+.tiptap-wrapper .ProseMirror pre .hljs-attr   { color: #C9C9C9; }
+.tiptap-wrapper .ProseMirror pre .hljs-attribute { color: #E6E6E6; }
+.tiptap-wrapper .ProseMirror pre .hljs-variable { color: #DDDDDD; }
+.tiptap-wrapper .ProseMirror pre .hljs-selector-class { color: #C9C9C9; }
+.tiptap-wrapper .ProseMirror pre .hljs-selector-id { color: #C9C9C9; }
+.tiptap-wrapper .ProseMirror pre .hljs-symbol { color: #E6E6E6; }
+.tiptap-wrapper .ProseMirror pre .hljs-section { color: #FFFFFF; font-weight: bold; }
+.tiptap-wrapper .ProseMirror pre .hljs-link { color: #E6E6E6; text-decoration: underline; }
+.tiptap-wrapper .ProseMirror pre .hljs-meta { color: #7A7A7A; }
+.tiptap-wrapper .ProseMirror pre .hljs-punctuation { color: #DCDCDC; }
+.tiptap-wrapper .ProseMirror pre .hljs-deletion { color: #9A9A9A; }
+
+/* ==== Tiptap Toolbar ==== */
+
+.tiptap-toolbar {
+  background: var(--color-bg);
+  border-bottom: 1px solid var(--color-border-light);
+  padding: 0 2.5rem;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.tiptap-toolbar .toolbar-inner {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.tiptap-toolbar .top-bar-item {
+  height: 32px;
+  width: 32px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.tiptap-toolbar .top-bar-item:hover {
+  background: var(--color-bg-secondary);
+  color: var(--color-text);
+}
+
+.tiptap-toolbar .top-bar-item.is-active {
+  background: var(--color-accent-bg);
+  color: var(--color-accent);
+}
+
+.tiptap-toolbar .toolbar-divider {
+  width: 1px;
+  height: 20px;
+  background: var(--color-border);
+  margin: 0 4px;
+  flex-shrink: 0;
+}
+
+.tiptap-toolbar .toolbar-select {
+  height: 32px;
+  padding: 0 8px;
+  border-radius: 6px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  transition: background 0.15s;
+}
+
+.tiptap-toolbar .toolbar-select:hover {
+  background: var(--color-bg-secondary);
+  color: var(--color-text);
+}
+
+.tiptap-toolbar .toolbar-select:focus {
+  outline: none;
+}
+
+.markdown-body h1, .markdown-body h2, .markdown-body h3, .markdown-body h4 {
+  font-family: var(--font-heading);
+  line-height: var(--line-height-tight);
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+}
+.markdown-body h1 { font-size: 1.75rem; }
+.markdown-body h2 { font-size: 1.4rem; }
+.markdown-body h3 { font-size: 1.15rem; }
+.markdown-body p { margin: 0.5em 0; line-height: 1.7; }
+
+/* Code blocks — always dark background */
+.markdown-body pre {
+  background: var(--color-code-bg);
+  border: 1px solid var(--color-code-border);
+  border-radius: var(--radius-md);
+  padding: 1em;
+  overflow-x: auto;
+  color: var(--color-code-text);
+}
+.markdown-body code {
+  font-family: var(--font-mono);
+  font-size: 0.88em;
+}
+.markdown-body :not(pre) > code {
+  background: var(--color-bg-secondary);
+  padding: 0.15em 0.4em;
+  border-radius: 4px;
+}
+.markdown-body pre code {
+  background: none;
+  padding: 0;
+}
+
+/* Syntax highlighting — Markdown 代码块（始终深底，同样只用灰阶） */
+.markdown-body .hljs-keyword,
+.markdown-body .hljs-selector-tag,
+.markdown-body .hljs-type    { color: #FFFFFF; font-weight: 600; }
+.markdown-body .hljs-literal { color: #E6E6E6; }
+.markdown-body .hljs-string,
+.markdown-body .hljs-addition,
+.markdown-body .hljs-regexp  { color: #C9C9C9; }
+.markdown-body .hljs-number  { color: #E6E6E6; }
+.markdown-body .hljs-comment { color: #7A7A7A; font-style: italic; }
+.markdown-body .hljs-built_in,
+.markdown-body .hljs-title,
+.markdown-body .hljs-title.class_ { color: #FFFFFF; }
+.markdown-body .hljs-attr   { color: #C9C9C9; }
+.markdown-body .hljs-attribute { color: #E6E6E6; }
+.markdown-body .hljs-variable { color: #DDDDDD; }
+.markdown-body .hljs-selector-class { color: #C9C9C9; }
+.markdown-body .hljs-selector-id { color: #C9C9C9; }
+.markdown-body .hljs-symbol { color: #E6E6E6; }
+.markdown-body .hljs-section { color: #FFFFFF; font-weight: bold; }
+.markdown-body .hljs-link { color: #E6E6E6; text-decoration: underline; }
+.markdown-body .hljs-meta { color: #7A7A7A; }
+.markdown-body .hljs-punctuation { color: #DCDCDC; }
+.markdown-body .hljs-deletion { color: #9A9A9A; }
+
+.markdown-body blockquote { border-left: 3px solid var(--color-accent); padding-left: 1em; color: var(--color-text-secondary); margin: 1em 0; }
+.markdown-body ul, .markdown-body ol { padding-left: 1.5em; }
+.markdown-body li { margin: 0.3em 0; }
+.markdown-body img { max-width: 100%; border-radius: var(--radius-md); }
+.markdown-body a { color: var(--color-accent); text-decoration: underline; }

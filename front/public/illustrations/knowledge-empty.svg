@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none" stroke="#0A0A0A" stroke-width="1.5" stroke-linecap="square" stroke-linejoin="miter" role="img" aria-label="知识库还没有文档">
+  <path d="M46 150h108"/>
+  <rect x="64" y="70" width="24" height="80"/>
+  <rect x="94" y="58" width="24" height="92"/>
+  <rect x="124" y="78" width="24" height="72"/>
+  <path d="M70 86h12M100 74h12M130 94h12"/>
+  <rect x="100" y="112" width="12" height="12" fill="#0A0A0A" stroke="none"/>
+</svg>

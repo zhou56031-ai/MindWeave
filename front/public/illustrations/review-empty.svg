@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none" stroke="#0A0A0A" stroke-width="1.5" stroke-linecap="square" stroke-linejoin="miter" role="img" aria-label="今天没有到期回顾">
+  <rect x="44" y="58" width="112" height="98"/>
+  <path d="M44 80h112"/>
+  <path d="M68 46v16M132 46v16"/>
+  <path d="M44 108h112M44 134h112"/>
+  <path d="M72 80v76M100 80v76M128 80v76"/>
+  <rect x="100" y="108" width="28" height="26" fill="#0A0A0A" stroke="none"/>
+</svg>

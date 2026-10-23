@@ -1,0 +1,283 @@
+import { useEffect, useState, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
+import { toast } from 'sonner'
+import { Upload, FileText, Trash2, Loader2, CheckCircle2, AlertCircle } from 'lucide-react'
+import { knowledgeApi } from '../api/knowledge'
+import { useSSE } from '../hooks/useSSE'
+import type { KnowledgeSSEMessage } from '../types/api'
+import EmptyState from '../components/common/EmptyState'
+import ConfirmDialog from '../components/common/ConfirmDialog'
+import DocumentDetailDrawer from '../components/knowledge/DocumentDetailDrawer'
+
+interface UploadFile {
+  file: File
+  progress: number
+  status: 'pending' | 'uploading' | 'success' | 'fail'
+  error?: string
+}
+
+export default function KnowledgeBase() {
+  const { t } = useTranslation()
+  const { start: startSSE } = useSSE()
+  const [docs, setDocs] = useState<Array<{ id: string; filename: string; chunk_count: number; created_at: string }>>([])
+  const [loading, setLoading] = useState(true)
+  const [uploadFiles, setUploadFiles] = useState<UploadFile[]>([])
+  const [uploadTotal, setUploadTotal] = useState(0)
+  const [uploadDone, setUploadDone] = useState(0)
+  const [dragOver, setDragOver] = useState(false)
+  const [showClean, setShowClean] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string; filename: string } | null>(null)
+  const [detailFilename, setDetailFilename] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const loadDocs = async () => {
+    setLoading(true)
+    try {
+      const res = await knowledgeApi.list()
+      const documents = (res.data as { documents: Array<{ id: string; filename: string; chunk_count: number; created_at: string }> } | undefined)?.documents || []
+      setDocs(documents)
+    } catch {
+      toast.error('加载文档列表失败')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // 挂载时拉取文档列表：loadDocs 首行的 setLoading(true) 仅服务于手动刷新路径（loading 初始值已为 true）；单次提交，无级联渲染
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => { loadDocs() }, [])
+
+  const handleFilesSelected = (files: FileList) => {
+    const newFiles: UploadFile[] = Array.from(files).map((f) => ({ file: f, progress: 0, status: 'pending' }))
+    setUploadFiles(newFiles)
+    setUploadTotal(newFiles.length)
+    setUploadDone(0)
+
+    const formData = new FormData()
+    newFiles.forEach((f) => formData.append('files', f.file))
+
+    startSSE(
+      '/knowledge/add/multiple/stream',
+      formData,
+      {
+        onKnowledgeProgress: (data: KnowledgeSSEMessage) => {
+          if (data.event_type === 'processing') {
+            setUploadFiles((prev) =>
+              prev.map((uf) =>
+                uf.file.name === data.filename
+                  ? { ...uf, progress: data.progress || 0, status: 'uploading' }
+                  : uf
+              )
+            )
+          } else if (data.event_type === 'completed') {
+            setUploadFiles((prev) =>
+              prev.map((uf) =>
+                uf.file.name === data.filename
+                  ? { ...uf, progress: 100, status: 'success' }
+                  : uf
+              )
+            )
+            setUploadDone((c) => c + 1)
+          } else if (data.event_type === 'error') {
+            setUploadFiles((prev) =>
+              prev.map((uf) =>
+                uf.file.name === data.filename
+                  ? { ...uf, status: 'fail', error: data.error_message || '上传失败' }
+                  : uf
+              )
+            )
+            setUploadDone((c) => c + 1)
+          } else if (data.event_type === 'finish') {
+            loadDocs()
+            setUploadFiles((prev) => {
+              const allSuccess = prev.length > 0 && prev.every((uf) => uf.status === 'success')
+              return allSuccess ? [] : prev
+            })
+            setUploadTotal(0)
+            setUploadDone(0)
+          }
+        },
+        onError: () => {
+          setUploadFiles((prev) =>
+            prev.map((uf) =>
+              uf.status === 'uploading' ? { ...uf, status: 'fail' as const } : uf
+            )
+          )
+        },
+      }
+    )
+  }
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault()
+    setDragOver(true)
+  }
+
+  const handleDragLeave = () => setDragOver(false)
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault()
+    setDragOver(false)
+    if (e.dataTransfer.files.length > 0) {
+      handleFilesSelected(e.dataTransfer.files)
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return
+    try {
+      await knowledgeApi.deleteByFilename(deleteTarget.filename)
+      setDocs((prev) => prev.filter((d) => d.id !== deleteTarget.id))
+    } catch {
+      toast.error('删除文档失败')
+    }
+    setDeleteTarget(null)
+  }
+
+  const handleCleanAll = async () => {
+    try {
+      await knowledgeApi.cleanAll()
+      setDocs([])
+    } catch {
+      toast.error('清空知识库失败')
+    }
+    setShowClean(false)
+  }
+
+  const formatSize = (bytes: number) => {
+    if (bytes < 1024) return `${bytes}B`
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)}KB`
+    return `${(bytes / (1024 * 1024)).toFixed(1)}MB`
+  }
+
+  const formatDate = (dateStr: string) => {
+    return new Date(dateStr).toLocaleDateString('zh-CN', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })
+  }
+
+  return (
+    <div className="max-w-4xl mx-auto py-8 px-6">
+      <div className="flex items-end justify-between mb-5 pb-4 border-b border-[var(--color-border)]">
+        <div>
+          <h1 className="font-heading text-[26px] font-semibold leading-tight tracking-[-0.01em] text-[var(--color-text)]">{t('knowledge.title')}</h1>
+          <p className="mt-1 text-[11px] tracking-wide text-[var(--color-text-tertiary)]">
+            {t('knowledge.count', { count: docs.length })}
+          </p>
+        </div>
+        {docs.length > 0 && (
+          <button
+            onClick={() => setShowClean(true)}
+            className="flex items-center gap-2 px-4 py-2 text-sm rounded-md border border-[var(--color-border)] text-[var(--color-danger)] hover:bg-[var(--color-danger-bg)] transition-colors"
+          >
+            <Trash2 size={14} />
+            {t('knowledge.cleanAll')}
+          </button>
+        )}
+      </div>
+
+      <div
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        className={`relative border border-dashed rounded-md px-6 py-8 text-center ${
+          dragOver ? 'border-[var(--color-accent)] bg-[var(--color-accent-bg)]' : 'border-[var(--color-border)] hover:border-[var(--color-text-tertiary)]'
+        }`}
+      >
+        <input
+          ref={fileInputRef}
+          type="file"
+          multiple
+          accept=".pdf,.txt,.md,.docx,.pptx"
+          className="hidden"
+          onChange={(e) => e.target.files && handleFilesSelected(e.target.files)}
+        />
+        <Upload size={20} className="mx-auto mb-2.5 text-[var(--color-text-tertiary)]" />
+        <p className="text-[13px] text-[var(--color-text-secondary)] mb-1">{t('knowledge.dragDrop')}</p>
+        <p className="text-[11px] text-[var(--color-text-tertiary)] mb-4">{t('knowledge.fileTypes')}</p>
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          className="px-3.5 py-1.5 text-xs rounded-[3px] bg-[var(--color-accent)] text-[var(--color-accent-contrast)] hover:bg-[var(--color-accent-hover)]"
+        >
+          {t('knowledge.upload')}
+        </button>
+      </div>
+
+      {uploadFiles.length > 0 && (
+        <div className="mt-4 space-y-2">
+          {uploadFiles.map((uf, i) => (
+            <div key={i} className="flex items-center gap-3 px-4 py-3 rounded-lg bg-[var(--color-card)] border border-[var(--color-border)]">
+              {uf.status === 'success' ? (
+                <CheckCircle2 size={16} className="text-[var(--color-success)] shrink-0" />
+              ) : uf.status === 'fail' ? (
+                <AlertCircle size={16} className="text-[var(--color-danger)] shrink-0" />
+              ) : (
+                <Loader2 size={16} className="animate-spin text-[var(--color-accent)] shrink-0" />
+              )}
+              <span className="text-sm text-[var(--color-text)] flex-1 truncate">{uf.file.name}</span>
+              {uf.status === 'fail' && uf.error ? (
+                <span className="text-xs text-[var(--color-danger)] truncate max-w-[240px]">{uf.error}</span>
+              ) : (
+                <span className="text-xs text-[var(--color-text-tertiary)]">{formatSize(uf.file.size)}</span>
+              )}
+              {uf.status === 'uploading' && (
+                <div className="w-24 h-1.5 rounded-full bg-[var(--color-bg-tertiary)] overflow-hidden">
+                  <div className="h-full bg-[var(--color-accent)] rounded-full transition-all" style={{ width: `${uf.progress}%` }} />
+                </div>
+              )}
+            </div>
+          ))}
+          {uploadDone === uploadTotal && uploadDone > 0 && (
+            <p className="text-xs text-[var(--color-success)] text-center">{t('knowledge.success')}</p>
+          )}
+        </div>
+      )}
+
+      <div className="mt-8">
+        <h2 className="text-[11px] uppercase tracking-[0.14em] text-[var(--color-text-tertiary)] mb-3">{t('knowledge.allDocs')}</h2>
+
+        {loading ? (
+          <div className="space-y-3">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-16 bg-[var(--color-bg-tertiary)] rounded-lg animate-pulse" />
+            ))}
+          </div>
+        ) : docs.length === 0 ? (
+          <EmptyState illustration="/illustrations/knowledge-empty.svg" message={t('knowledge.empty')} />
+        ) : (
+          <div className="overflow-hidden rounded-md border border-[var(--color-border)] bg-[var(--color-card)] divide-y divide-[var(--color-border)]">
+            {docs.map((doc) => (
+              <div
+                key={doc.id}
+                onClick={() => setDetailFilename(doc.filename)}
+                className="group flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-[var(--color-bg-secondary)]"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <FileText size={16} className="text-[var(--color-text-tertiary)] shrink-0" />
+                  <div className="min-w-0">
+                    <p className="text-sm text-[var(--color-text)] truncate">{doc.filename}</p>
+                    <p className="text-xs text-[var(--color-text-tertiary)]">
+                      {doc.chunk_count > 0
+                        ? `${doc.chunk_count} chunks · ${formatDate(doc.created_at)}`
+                        : t('knowledge.parsing')}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setDeleteTarget(doc) }}
+                    className="p-1.5 rounded opacity-0 group-hover:opacity-100 focus-visible:opacity-100 text-[var(--color-text-tertiary)] hover:text-[var(--color-danger)] hover:bg-[var(--color-danger-bg)]"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <ConfirmDialog open={showClean} onOpenChange={setShowClean} title={t('knowledge.cleanAll')} message={t('knowledge.cleanConfirm')} variant="danger" confirmText={t('knowledge.cleanAll')} onConfirm={handleCleanAll} />
+      <ConfirmDialog open={!!deleteTarget} onOpenChange={() => setDeleteTarget(null)} title={t('common.confirm')} message={t('knowledge.deleteConfirm')} variant="danger" confirmText={t('note.delete')} onConfirm={handleDelete} />
+      <DocumentDetailDrawer filename={detailFilename} onClose={() => setDetailFilename(null)} />
+    </div>
+  )
+}

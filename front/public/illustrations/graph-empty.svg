@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none" stroke="#0A0A0A" stroke-width="1.5" stroke-linecap="square" stroke-linejoin="miter" role="img" aria-label="知识图谱还没有内容">
+  <path d="M62 72l50-20M112 52l30 46M142 98l-50 28M92 126l-30-54"/>
+  <circle cx="62" cy="72" r="7"/>
+  <circle cx="142" cy="98" r="7"/>
+  <circle cx="92" cy="126" r="7"/>
+  <circle cx="48" cy="140" r="7"/>
+  <circle cx="112" cy="52" r="7" fill="#0A0A0A" stroke="none"/>
+</svg>

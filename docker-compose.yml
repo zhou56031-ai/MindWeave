@@ -1,0 +1,146 @@
+# 保留旧项目名以复用已有数据卷：改名会让 Docker 视为新项目并挂载空卷。
+name: mindweave
+
+services:
+  mysql:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?请在根目录.env中填写MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-mindweave}
+      MYSQL_USER: ${MYSQL_USER:-rag_learner}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?请在根目录.env中填写MYSQL_PASSWORD}
+    ports:
+      - "127.0.0.1:${MYSQL_PORT:-13306}:3306"
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --default-time-zone=+00:00
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+      start_period: 20s
+
+  redis:
+    image: redis:7.4
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${REDIS_PORT:-16379}:6379"
+    volumes:
+      - redis_data:/data
+    command: ["redis-server", "--appendonly", "yes"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  neo4j:
+    image: neo4j:5.26-community
+    restart: unless-stopped
+    environment:
+      NEO4J_AUTH: neo4j/${NEO4J_PASSWORD:?请在根目录.env中填写NEO4J_PASSWORD}
+    ports:
+      - "127.0.0.1:17474:7474"
+      - "127.0.0.1:17687:7687"
+    volumes:
+      - neo4j_data:/data
+
+  backend:
+    build: ./backend
+    restart: unless-stopped
+    environment: &backend_env
+      APP_NAME: MindWeave
+      ENV: prod
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_DB: 3
+      SECRET_KEY: ${SECRET_KEY}
+      DEEPSEEK_API_KEY: ${DEEPSEEK_API_KEY}
+      DEEPSEEK_API_KEY_BACKUP: ${DEEPSEEK_API_KEY_BACKUP}
+      DEEPSEEK_BASE_URL: ${DEEPSEEK_BASE_URL}
+      DEEPSEEK_MODEL: ${DEEPSEEK_MODEL}
+      NEO4J_URI: bolt://neo4j:7687
+      NEO4J_USER: neo4j
+      NEO4J_PASSWORD: ${NEO4J_PASSWORD}
+      EMBEDDING_PROVIDER: ${EMBEDDING_PROVIDER:-local}
+      EMBEDDING_MODEL: ${EMBEDDING_MODEL:-BAAI/bge-small-zh-v1.5}
+      EMBEDDING_DIMENSIONS: ${EMBEDDING_DIMENSIONS:-512}
+      EMBEDDING_BASE_URL: ${EMBEDDING_BASE_URL:-https://maas.qianwenaiapi.com/compatible-mode/v1}
+      EMBEDDING_API_KEY: ${EMBEDDING_API_KEY:-}
+      EMBEDDING_BATCH_SIZE: ${EMBEDDING_BATCH_SIZE:-10}
+      VISION_BATCH_SIZE: ${VISION_BATCH_SIZE:-5}
+      VISION_DEDUP_ENABLED: ${VISION_DEDUP_ENABLED:-true}
+      VISION_DEDUP_THRESHOLD: ${VISION_DEDUP_THRESHOLD:-10}
+      VISION_MAX_PAGES: ${VISION_MAX_PAGES:-50}
+      WEB_SEARCH_ENABLED: ${WEB_SEARCH_ENABLED:-false}
+      WEB_SEARCH_PROVIDER: ${WEB_SEARCH_PROVIDER:-}
+      WEB_SEARCH_API_KEY: ${WEB_SEARCH_API_KEY:-}
+      RATE_LIMIT_ENABLED: ${RATE_LIMIT_ENABLED:-true}
+      RATE_LIMIT_CHAT_PER_MINUTE: ${RATE_LIMIT_CHAT_PER_MINUTE:-10}
+      RATE_LIMIT_UPLOAD_PER_MINUTE: ${RATE_LIMIT_UPLOAD_PER_MINUTE:-5}
+      LOG_LEVEL: ${LOG_LEVEL:-INFO}
+    ports:
+      - "127.0.0.1:8100:8000"
+    volumes:
+      - extracted_data:/srv/data
+      - media_data:/srv/media
+      - model_cache:/model-cache
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      neo4j:
+        condition: service_started
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/ready', timeout=5)
+      interval: 10s
+      timeout: 6s
+      retries: 10
+      start_period: 30s
+
+  worker:
+    build: ./backend
+    restart: unless-stopped
+    command: ["python", "-m", "app.graph.worker"]
+    environment: *backend_env
+    volumes:
+      - extracted_data:/srv/data
+      - media_data:/srv/media
+      - model_cache:/model-cache
+    depends_on:
+      mysql:
+        condition: service_healthy
+      neo4j:
+        condition: service_started
+
+  front:
+    build: ./front
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3100:80"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  mysql_data:
+  redis_data:
+  neo4j_data:
+  extracted_data:
+  media_data:
+  model_cache:

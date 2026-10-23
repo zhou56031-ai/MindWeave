@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/brand/icon-32.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/brand/apple-touch-icon.png" />
+    <meta name="theme-color" content="#F2F2F2" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0A0A0A" media="(prefers-color-scheme: dark)" />
+    <script>
+      // 在首帧前应用主题：深色模式下先给 <html> 加 dark，避免闪一帧白底
+      try {
+        var stored = JSON.parse(localStorage.getItem('theme') || 'null');
+        var theme = stored && stored.state ? stored.state.theme : 'light';
+        if (theme === 'dark') document.documentElement.classList.add('dark');
+      } catch (e) {}
+    </script>
+    <meta name="description" content="织识 MindWeave：把笔记、文档与知识图谱织成一张可检索的网。" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="织识 MindWeave" />
+    <meta property="og:description" content="把笔记、文档与知识图谱织成一张可检索的网。" />
+    <meta property="og:image" content="/brand/og.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <title>织识 · MindWeave</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
