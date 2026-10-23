@@ -109,6 +109,10 @@ MindWeave 是一个**面向个人学习的知识工作台**。它把三件通常
 
 <img src="docs/images/app-knowledge-light.png" width="100%" alt="知识库">
 
+**知识图谱**
+
+<img src="docs/images/graph-mono.png" width="100%" alt="知识图谱：文档、实体与关系">
+
 ## 系统架构
 
 ```mermaid
