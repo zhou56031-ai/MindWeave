@@ -7,7 +7,7 @@
 正式复刻前端位于：
 
 ```text
-./front
+/Users/zhoujian_mac/Documents/Codex/2026-10-19/https-github-com-rma-mun-ragnotebook/outputs/RAGNotebook/RAGNotebook-rebuild/front
 ```
 
 我从参考仓库提交 `7445eb31dba2a9d07a1a5d4b7dd477d099a476f4` 提取了**已提交的完整 `front/` 目录**，包括 React 页面、路由、API 请求模块、状态管理、编辑器、图谱组件、样式、静态资源、构建配置和 `package-lock.json`。这样保留了原项目的界面与交互基础。参考工作区中未提交的 `LocalAutoLogin.tsx` 和本地改动没有进入复刻目录；本机环境文件、`node_modules` 与构建产物也没有从参考目录复制。原仓库的 MIT `LICENSE` 已复制到复刻根目录。

@@ -41,7 +41,7 @@
 所有复刻代码固定写入：
 
 ```text
-.
+/Users/zhoujian_mac/Documents/Codex/2026-10-19/https-github-com-rma-mun-ragnotebook/outputs/RAGNotebook/RAGNotebook-rebuild
 ```
 
 目录树、变更清单和代码标记可以用 `backend/main.py` 等相对路径，均从这个复刻根目录算起。每个文件操作步骤必须另外给出完整绝对地址，不能要求读者自行拼接。上一级 RAGNotebook 的源码用于参考；教材与学习画像继续保存在上一级的 `docs/rebuild-guide`。
@@ -55,7 +55,7 @@
 | Python 与依赖 | Python 3.12.13；FastAPI、Pydantic、SQLAlchemy、MySQL、Redis 与上传相关依赖已按前 26 篇配置 | 新增依赖时才补安装步骤 |
 | Git | 复刻根目录已有独立仓库，环境提交为 15e645d | 不重复 git init，不影响参考仓库 |
 | 后端应用入口 | 第 01–65 篇对应能力已接入；82 个自动测试、前端构建和 Compose 配置通过，QwenCloud Embedding 与真实 MySQL/Redis/Neo4j 关键路径已验证 | 保留完整镜像构建与浏览器人工验收的真实状态，不把配置校验写成部署验收 |
-| 前端 | 参考源码已复制到 `MindWeave/front` | 按已接入的源码继续；注册页面入口已移除 |
+| 前端 | 参考源码已复制到 `RAGNotebook-rebuild/front` | 按已接入的源码继续；注册页面入口已移除 |
 | 原第 02–04 章练习 | 没有创建 | 后续应用不得依赖这些练习文件 |
 
 每次继续编写前重新检查实际文件；若用户已经改动，以实际状态为起点。生成教材、助手运行成功、用户独立完成，分别记录。
@@ -99,7 +99,7 @@
 |---|---|
 | 执行或编辑位置 | 编辑给出文件完整绝对路径；终端命令给出执行目录完整绝对路径 |
 | 目录操作 | 需要先新建哪个文件夹，已有目录是否复用 |
-| 文件路径 | 每步给出从 ~ 开始的完整绝对路径，放在独立 text 代码块中供复制 |
+| 文件路径 | 每步给出从 /Users/zhoujian_mac 开始的完整绝对路径，放在独立 text 代码块中供复制 |
 | 操作类型 | 新建，或按 diff 定位修改已有文件 |
 | 文件作用 | 它负责什么、由谁使用、为什么现在需要它 |
 | 变更标记 | 【新增文件】【新增】【修改】【删除】【运行验证】，精确到函数或配置项 |
@@ -112,7 +112,7 @@
 **编辑文件的完整地址：**
 
 ```text
-./backend/app/core/settings.py
+/Users/zhoujian_mac/Documents/Codex/2026-10-19/https-github-com-rma-mun-ragnotebook/outputs/RAGNotebook/RAGNotebook-rebuild/backend/app/core/settings.py
 ```
 
 标题可保留短相对路径便于辨认，正文地址不使用“复刻根目录中的上述路径”“同上”“自行拼接”、省略号或用户名占位符。文件尚未创建时也给出要创建的精确地址，先创建父目录。终端命令则标明具体目录的完整路径，不把文件路径当作 cd 的目标。
@@ -172,7 +172,7 @@
 **编辑文件的完整地址：**
 
 ```text
-./backend/main.py
+/Users/zhoujian_mac/Documents/Codex/2026-10-19/https-github-com-rma-mun-ragnotebook/outputs/RAGNotebook/RAGNotebook-rebuild/backend/main.py
 ```
 
 定位 `health` 函数，前后对照如下：
@@ -213,7 +213,7 @@
 **执行位置：终端中的复刻根目录。**
 
 ```bash
-cd "./backend"
+cd "/Users/zhoujian_mac/Documents/Codex/2026-10-19/https-github-com-rma-mun-ragnotebook/outputs/RAGNotebook/RAGNotebook-rebuild/backend"
 mkdir -p app
 ```
 
@@ -226,7 +226,7 @@ mkdir -p app
 **编辑文件的完整地址：**
 
 ```text
-./backend/app/__init__.py
+/Users/zhoujian_mac/Documents/Codex/2026-10-19/https-github-com-rma-mun-ragnotebook/outputs/RAGNotebook/RAGNotebook-rebuild/backend/app/__init__.py
 ```
 
 **作用：** 将 app 作为明确的 Python 包组织，供后续业务模块导入；启动命令直接导入 backend 下的 main.py。
@@ -244,7 +244,7 @@ mkdir -p app
 **编辑文件的完整地址：**
 
 ```text
-./backend/main.py
+/Users/zhoujian_mac/Documents/Codex/2026-10-19/https-github-com-rma-mun-ragnotebook/outputs/RAGNotebook/RAGNotebook-rebuild/backend/main.py
 ```
 
 **作用：** 创建 FastAPI 应用对象，注册一个健康检查入口，供后续启动器导入。

@@ -317,7 +317,7 @@ include_router 负责让这条路径能够被匹配，响应内容仍由处理�
 
 等笔记路由、账号路由等真实文件创建后，分别导入它们的路由组，再在入口 include_router。每个文件管理自己的一组规则，main.py 负责组合整个应用；当前阶段不需要提前创建或导入尚不存在的模块。
 
-**对应代码：** [main.py](../../MindWeave/backend/main.py)、[health.py](../../MindWeave/backend/app/router/health.py)、[success_response.py](../../MindWeave/backend/app/core/success_response.py)。  
+**对应代码：** [main.py](../../RAGNotebook-rebuild/backend/main.py)、[health.py](../../RAGNotebook-rebuild/backend/app/router/health.py)、[success_response.py](../../RAGNotebook-rebuild/backend/app/core/success_response.py)。  
 **对应教材：** [新版第 01 篇](chapters/01-backend-entry-and-health.md)。
 
 ---
@@ -510,7 +510,7 @@ print(note.model_dump())
 
 如果只把同一个输入的 title 改为三个空格，strip 后是空字符串，长度为 0，不满足 min_length=1，模型构造抛出 ValidationError。这里业务对象没有成功交出，也没有数据库操作。
 
-**对应代码：** [models.py](../../MindWeave/backend/app/schemas/models.py)。  
+**对应代码：** [models.py](../../RAGNotebook-rebuild/backend/app/schemas/models.py)。  
 **对应教材：** [第 02 篇](chapters/02-request-models-config-and-errors.md)。
 
 ---
@@ -524,7 +524,7 @@ print(note.model_dump())
 **对应文件完整地址：**
 
 ```text
-./docker-compose.yml
+/Users/zhoujian_mac/Documents/Codex/2026-10-19/https-github-com-rma-mun-ragnotebook/outputs/RAGNotebook/RAGNotebook-rebuild/docker-compose.yml
 ```
 
 ### 先从实际目标理解
@@ -539,7 +539,7 @@ print(note.model_dump())
 
 | 配置 | 当前含义 | 不应混淆的内容 |
 |---|---|---|
-| name: MindWeave | Compose 项目分组名 | 不是 MySQL 数据库名 |
+| name: ragnotebook-rebuild | Compose 项目分组名 | 不是 MySQL 数据库名 |
 | services: | 声明这组项目包含哪些服务 | 不是 Python 类或函数 |
 | mysql: | 这一项服务的名字 | 名字本身不决定安装哪个软件 |
 | image: mysql:8.0 | 使用 MySQL 8.0 系列镜像 | 镜像与运行中的容器是两件事 |
@@ -553,10 +553,10 @@ print(note.model_dump())
 可以把接下来的参数想成给数据库管理员的开工交代：
 
 - MYSQL_ROOT_PASSWORD：设置 root 管理账户口令。
-- MYSQL_DATABASE：创建本项目使用的数据库，当前默认 MindWeave。
+- MYSQL_DATABASE：创建本项目使用的数据库，当前默认 ragnotebook_rebuild。
 - MYSQL_USER 和 MYSQL_PASSWORD：配合创建应用账户 rag_learner，并赋予对上述数据库的权限；后端使用这个账户连接，不使用 root。
 
-库是装业务表的空间。创建 MindWeave 不代表已经创建 notes 表，也不代表已经保存任何笔记；notes 由后续 ORM 模型与建表流程建立。
+库是装业务表的空间。创建 ragnotebook_rebuild 不代表已经创建 notes 表，也不代表已经保存任何笔记；notes 由后续 ORM 模型与建表流程建立。
 
 这些初始化变量针对空数据目录首次初始化。已有 MySQL 数据后，仅修改 .env 不会自动把已存在用户的口令改掉。依据 [MySQL 官方镜像说明](https://hub.docker.com/_/mysql)。
 
@@ -565,7 +565,7 @@ print(note.model_dump())
 以这一行为例：
 
 ```yaml
-MYSQL_DATABASE: ${MYSQL_DATABASE:-MindWeave}
+MYSQL_DATABASE: ${MYSQL_DATABASE:-ragnotebook_rebuild}
 ```
 
 左边是要交给容器的变量名称。右边是 Compose 在启动前先求出的值，来源通常是当前 Shell 环境或项目 .env。
@@ -582,7 +582,7 @@ Compose 替换后，相当于交给容器：
 MYSQL_DATABASE: my_learning_db
 ```
 
-如果外部没有设置，或值为空，因为写了 `:-`，就使用 MindWeave 这个默认值。左边与右边变量刚好同名是为了统一约定，不是给自己赋值形成循环。
+如果外部没有设置，或值为空，因为写了 `:-`，就使用 ragnotebook_rebuild 这个默认值。左边与右边变量刚好同名是为了统一约定，不是给自己赋值形成循环。
 
 另一种写法是：
 
@@ -609,7 +609,7 @@ MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?请在根目录.env中填写MYSQL_RO
 **实际本机配置文件的完整地址：**
 
 ```text
-./.env
+/Users/zhoujian_mac/Documents/Codex/2026-10-19/https-github-com-rma-mun-ragnotebook/outputs/RAGNotebook/RAGNotebook-rebuild/.env
 ```
 
 本次只检查文件是否存在，没有读取或展示实际密码。检查时 docker-compose.yml 已存在，.env 尚未创建；本次问答没有自动创建 .env 或启动容器。
@@ -625,7 +625,7 @@ Docker 端口映射
        ↓
 容器内部 MySQL:3306
        ↓
-MindWeave 数据库
+ragnotebook_rebuild 数据库
 ```
 
 因此 settings.py 的 MYSQL_PORT 是 13306，容器内部仍是 3306。Compose 中 mysql 服务名也不是当前在 Mac 运行的后端应连接的宿主机地址。
@@ -656,20 +656,20 @@ mysql_data 数据卷保存数据库文件，容器停止不等于清空卷。hea
 ### 已验证的结果
 
 - Docker 引擎已运行，版本 29.6.2。
-- 容器：MindWeave-mysql-1；MySQL 8.0.46。
-- 连接：127.0.0.1:13306；数据库 MindWeave；应用账户 rag_learner。
+- 容器：ragnotebook-rebuild-mysql-1；MySQL 8.0.46。
+- 连接：127.0.0.1:13306；数据库 ragnotebook_rebuild；应用账户 rag_learner。
 - 密码变量不再缺失，本机实际配置与数据库首次初始化使用同一组值。
 
 **实际本机配置的完整地址：**
 
 ```text
-./.env
+/Users/zhoujian_mac/Documents/Codex/2026-10-19/https-github-com-rma-mun-ragnotebook/outputs/RAGNotebook/RAGNotebook-rebuild/.env
 ```
 
 **查看复刻容器状态的执行目录与命令：**
 
 ```bash
-cd "."
+cd "/Users/zhoujian_mac/Documents/Codex/2026-10-19/https-github-com-rma-mun-ragnotebook/outputs/RAGNotebook/RAGNotebook-rebuild"
 docker compose ps
 ```
 
@@ -690,7 +690,7 @@ docker compose ps
 **文件完整地址：**
 
 ```text
-./backend/app/db/db_config.py
+/Users/zhoujian_mac/Documents/Codex/2026-10-19/https-github-com-rma-mun-ragnotebook/outputs/RAGNotebook/RAGNotebook-rebuild/backend/app/db/db_config.py
 ```
 
 ### 先带着一篇笔记看整体
@@ -716,7 +716,7 @@ database_url = URL.create(
 )
 ```
 
-本项目对应地址为 127.0.0.1:13306，库为 MindWeave，账户为 rag_learner。mysql 是数据库方言，aiomysql 是异步通信驱动。
+本项目对应地址为 127.0.0.1:13306，库为 ragnotebook_rebuild，账户为 rag_learner。mysql 是数据库方言，aiomysql 是异步通信驱动。
 
 MYSQL_PASSWORD 是 SecretStr，常规显示会掩码；驱动最终需要真实口令，所以在这一处显式 get_secret_value。提取真实口令不代表应该把它写到日志或聊天中。
 
@@ -843,7 +843,7 @@ engine.connect 从引擎取得连接，执行 SELECT 1：让数据库返回常�
 
 这个模块本身不创建 notes 表，不启动 Docker 或 HTTP 服务，不因定义 get_db 就自动影响所有路由。需要相应生命周期与 Depends 注册后，各部分才会在正确时机参与执行。
 
-**对应源码：** [db_config.py](../../MindWeave/backend/app/db/db_config.py)。  
+**对应源码：** [db_config.py](../../RAGNotebook-rebuild/backend/app/db/db_config.py)。  
 **对应教材：** [第 03 篇](chapters/03-mysql-and-async-session.md)。
 
 ---
@@ -935,16 +935,16 @@ app = FastAPI(title=settings.APP_NAME, lifespan=lifespan)
 **生命周期文件完整地址：**
 
 ```text
-./backend/app/core/lifespan.py
+/Users/zhoujian_mac/Documents/Codex/2026-10-19/https-github-com-rma-mun-ragnotebook/outputs/RAGNotebook/RAGNotebook-rebuild/backend/app/core/lifespan.py
 ```
 
 **入口完整地址：**
 
 ```text
-./backend/main.py
+/Users/zhoujian_mac/Documents/Codex/2026-10-19/https-github-com-rma-mun-ragnotebook/outputs/RAGNotebook/RAGNotebook-rebuild/backend/main.py
 ```
 
-**对应代码：** [lifespan.py](../../MindWeave/backend/app/core/lifespan.py)、[main.py](../../MindWeave/backend/main.py)。  
+**对应代码：** [lifespan.py](../../RAGNotebook-rebuild/backend/app/core/lifespan.py)、[main.py](../../RAGNotebook-rebuild/backend/main.py)。  
 **对应教材：** [第 03 篇](chapters/03-mysql-and-async-session.md)。
 
 ---
@@ -994,13 +994,13 @@ async def init_db() -> None:
 
 ### 具体会发生什么
 
-第一次启动，数据库 `MindWeave` 已存在但没有 `notes` 表：`create_all` 查到表不存在，发出建表语句，随后 `SHOW TABLES` 能看到 `notes`。第二次启动，表已经存在：默认 `checkfirst=True`，它检查后跳过建表，原有笔记仍在。这个默认行为见 [SQLAlchemy MetaData 文档](https://docs.sqlalchemy.org/en/20/core/metadata.html#sqlalchemy.schema.MetaData.create_all)。
+第一次启动，数据库 `ragnotebook_rebuild` 已存在但没有 `notes` 表：`create_all` 查到表不存在，发出建表语句，随后 `SHOW TABLES` 能看到 `notes`。第二次启动，表已经存在：默认 `checkfirst=True`，它检查后跳过建表，原有笔记仍在。这个默认行为见 [SQLAlchemy MetaData 文档](https://docs.sqlalchemy.org/en/20/core/metadata.html#sqlalchemy.schema.MetaData.create_all)。
 
 假如你后来在 `Note` 模型中增加 `summary` 字段，现有 `notes` 表不会因为再次运行 `create_all` 就自动增加这一列。它负责创建缺失的表，不负责把已有表升级到新结构；这类结构变化要用迁移工具或明确的 `ALTER TABLE`。它也不插入笔记数据；笔记由 `NoteService.create_note` 中的 `db.add` 与 `await db.commit()` 保存。
 
 ### 追问：举一个具体的例子
 
-下面是假设一个**刚创建且没有表**的 `MindWeave` 数据库，用你现在的 `Note` 模型说明过程；不需要清空当前真实数据库来做这个练习。
+下面是假设一个**刚创建且没有表**的 `ragnotebook_rebuild` 数据库，用你现在的 `Note` 模型说明过程；不需要清空当前真实数据库来做这个练习。
 
 **开机前**，MySQL 像一间空仓库：数据库已经有了，但执行 `SHOW TABLES;` 看不到 `notes`。Python 里的 `Note` 模型虽然写着 `__tablename__ = "notes"`，这时还只是一张图纸。
 
@@ -1083,7 +1083,7 @@ Content-Type: application/json
 
 **检查自己是否理解：** 如果新增一个继承 Base 的 `Tag` 模型文件，却从来没有导入它，启动时 `create_all` 会知道要创建 `tags` 表吗？答案是不会；先让模型定义执行并登记图纸，建表动作才能看到它。
 
-**对应源码：** [base.py](../../MindWeave/backend/app/models/base.py)、[note.py](../../MindWeave/backend/app/models/note.py)、[db_config.py](../../MindWeave/backend/app/db/db_config.py)。  
+**对应源码：** [base.py](../../RAGNotebook-rebuild/backend/app/models/base.py)、[note.py](../../RAGNotebook-rebuild/backend/app/models/note.py)、[db_config.py](../../RAGNotebook-rebuild/backend/app/db/db_config.py)。  
 **对应教材：** [第 04 篇](chapters/04-note-model-and-create-read.md)。
 
 ---
@@ -1096,7 +1096,7 @@ Content-Type: application/json
 
 ### 这条警告在说什么
 
-终端提示符的 `(backend)` 只显示环境的短名字。当前激活的环境实际在**上一级参考项目** `RAGNotebook/backend/.venv`；当前目录的 uv 项目环境则在**复刻项目** `RAGNotebook/MindWeave/backend/.venv`。两者都叫 `backend`，但不是同一个目录。
+终端提示符的 `(backend)` 只显示环境的短名字。当前激活的环境实际在**上一级参考项目** `RAGNotebook/backend/.venv`；当前目录的 uv 项目环境则在**复刻项目** `RAGNotebook/RAGNotebook-rebuild/backend/.venv`。两者都叫 `backend`，但不是同一个目录。
 
 `uv run` 在项目目录中默认选当前项目的 `.venv`，因此忽略了不匹配的 `VIRTUAL_ENV`，同时发出警告。创建命令仍成功返回 UUID；已通过详情接口核对这篇笔记存在。见 [uv 官方项目配置说明](https://docs.astral.sh/uv/concepts/projects/config/)。
 
@@ -1106,13 +1106,13 @@ Content-Type: application/json
 
 ```bash
 deactivate
-cd "./backend"
+cd "/Users/zhoujian_mac/Documents/Codex/2026-10-19/https-github-com-rma-mun-ragnotebook/outputs/RAGNotebook/RAGNotebook-rebuild/backend"
 source .venv/bin/activate
 printf '%s\n' "$VIRTUAL_ENV"
 printf '%s\n' "$NOTE_ID"
 ```
 
-第一个路径检查应包含 `MindWeave/backend/.venv`；第二个仍应是刚才得到的 UUID。若终端没有激活 Python 虚拟环境，直接 `cd` 与 `source` 即可。千万不要在这里使用 `uv run --active` 来“消除警告”：`--active` 会优先选择当前激活环境，若它仍指向上一级项目，就继续用错环境。也不要再次运行 `POST /note/create`；每执行一次都会多创建一篇笔记。只为解析 JSON 时，也可以直接使用 `./.venv/bin/python`，第 05 篇命令已这样修改。
+第一个路径检查应包含 `RAGNotebook-rebuild/backend/.venv`；第二个仍应是刚才得到的 UUID。若终端没有激活 Python 虚拟环境，直接 `cd` 与 `source` 即可。千万不要在这里使用 `uv run --active` 来“消除警告”：`--active` 会优先选择当前激活环境，若它仍指向上一级项目，就继续用错环境。也不要再次运行 `POST /note/create`；每执行一次都会多创建一篇笔记。只为解析 JSON 时，也可以直接使用 `./.venv/bin/python`，第 05 篇命令已这样修改。
 
 **当前进度边界：** 本条记录的是当时出现警告时的操作；截至 2026-10-20，正式复刻目录已与新版第 07 篇最终版对齐。后续测试以现有代码和当前教程为准。
 

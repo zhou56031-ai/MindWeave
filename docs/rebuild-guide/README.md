@@ -1,4 +1,4 @@
-# MindWeave 复刻教程（基于 RAGNotebook）
+# RAGNotebook 复刻教程
 
 > 2026-10-20，按最新要求重新建立教程。面向有 Python、HTTP、JSON 和异步基础的学习者。
 
@@ -10,7 +10,7 @@
 
 第 53 篇的 Compose 代码和配置已完成，但“从空镜像构建全部容器、重启后验证持久化”的最终运行验收仍以本机实际结果为准。教程生成不代表 Docker 构建已经成功。
 
-正式复刻目录已代执行第 01–26 篇的应用步骤；第 23 篇解析文件在第 24 篇实施前已存在。Markdown/ZIP 导出、知识表和列表、单文件及多文件上传、详情和删除均经真实请求验证。前端源码已从参考提交复制进 `MindWeave/front`，Vite 端口为 3100、后端代理为 8100，注册页面入口已移除。前端交付状态及运行方法见[前端接入记录](frontend-integration.md)。
+正式复刻目录已代执行第 01–26 篇的应用步骤；第 23 篇解析文件在第 24 篇实施前已存在。Markdown/ZIP 导出、知识表和列表、单文件及多文件上传、详情和删除均经真实请求验证。前端源码已从参考提交复制进 `RAGNotebook-rebuild/front`，Vite 端口为 3100、后端代理为 8100，注册页面入口已移除。前端交付状态及运行方法见[前端接入记录](frontend-integration.md)。
 
 ## 当前进度
 
@@ -131,10 +131,10 @@
 固定复刻根目录：
 
 ```text
-.
+/Users/zhoujian_mac/Documents/Codex/2026-10-19/https-github-com-rma-mun-ragnotebook/outputs/RAGNotebook/RAGNotebook-rebuild
 ```
 
-上一级源码作为参考。教材、问答与学习画像仍放在这里的 docs/rebuild-guide；应用代码和个人运行记录写进 MindWeave。
+上一级源码作为参考。教材、问答与学习画像仍放在这里的 docs/rebuild-guide；应用代码和个人运行记录写进 RAGNotebook-rebuild。
 
 ## 保留的文档
 
@@ -146,7 +146,7 @@
 - [前端接入记录](frontend-integration.md)：已完成的源码复制、运行验证，以及前后端调用关系。
 - [知识问答册](03-knowledge-q-and-a.md)：保留实际提问和解释。
 - [学习画像](learner-profile/README.md)：保留已知基础和讲解偏好。
-- [已完成的环境操作记录](../../MindWeave/环境搭建记录（未随仓库发布）)：沿用已有环境，不重新初始化。
+- [已完成的环境操作记录](../../RAGNotebook-rebuild/docs/05-environment-setup.md)：沿用已有环境，不重新初始化。
 
 ## 旧材料清理说明
 

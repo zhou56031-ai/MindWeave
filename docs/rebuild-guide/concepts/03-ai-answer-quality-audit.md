@@ -2,7 +2,7 @@
 
 ## 1. 对比结论与范围
 
-本次检查日期：2026-10-21。参考项目是仓库根目录的 `backend/`，复刻项目是 `MindWeave/backend/`。本次只检查和解释，没有修改业务代码，也没有执行已取消的第 37–39 篇任务。
+本次检查日期：2026-10-21。参考项目是仓库根目录的 `backend/`，复刻项目是 `RAGNotebook-rebuild/backend/`。本次只检查和解释，没有修改业务代码，也没有执行已取消的第 37–39 篇任务。
 
 两套本地 `.env` 配置的聊天模型名称都是 `deepseek-flash`，嵌入模型名称都是 `text-embedding-v4`。这只能证明文件配置的模型名称一致，不代表已经确认运行进程读取了同一配置、调用了完全相同的服务，或拥有相同的资料。
 
@@ -29,7 +29,7 @@
 inputs = {"messages": [*chat_history, HumanMessage(content=query)]}
 ```
 
-复刻版 `MindWeave/backend/app/services/chat_stream_service.py` 在回答结束后调用 `append_turn` 存储对话，但生成回答时构造的 `messages` 只有系统提示词和当前问题，没有读取旧消息。
+复刻版 `RAGNotebook-rebuild/backend/app/services/chat_stream_service.py` 在回答结束后调用 `append_turn` 存储对话，但生成回答时构造的 `messages` 只有系统提示词和当前问题，没有读取旧消息。
 
 比如第一轮你说：“比较 MySQL 和 Redis。”第二轮你说：“第二个适合存什么？”界面虽然显示了第一轮，模型却只拿到“第二个适合存什么”。这就像老师把上一页讲义收进档案柜，却只给学生发了写着“解释第二个”的新纸条。数据库保存成功和模型能利用记忆，是两条需要分别接通的数据流。
 

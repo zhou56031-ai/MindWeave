@@ -37,7 +37,7 @@
 
 ## 固定工作区与当前进度
 
-- 你指定的复刻根目录：`.`。后续复刻均在此处进行。
+- 你指定的复刻根目录：`/Users/zhoujian_mac/Documents/Codex/2026-10-19/https-github-com-rma-mun-ragnotebook/outputs/RAGNotebook/RAGNotebook-rebuild`。后续复刻均在此处进行。
 - 第 01 章的目录文件与第 05 章的后端环境已由助手准备；Python 虚拟环境、依赖、锁文件和 requirements.txt 已就绪。正式复刻目录已对齐新版第 16 篇最终版，并通过真实 MySQL 用户、笔记、模板流程及 Redis 令牌状态验证；前端已直接复制进复刻目录。
 - 代建文件属于材料准备，不能据此上调终端、Git、Python 或后端知识的掌握程度。
 

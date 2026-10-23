@@ -12,7 +12,7 @@
 
 ## 2. 当前起点
 
-复刻项目位于用户指定的 MindWeave，已有 Python 3.12.13 环境、现阶段后端依赖、requirements.txt、uv.lock 和独立 Git 仓库。本篇路线不重复编程基础课，也不要求先补做旧练习。
+复刻项目位于用户指定的 RAGNotebook-rebuild，已有 Python 3.12.13 环境、现阶段后端依赖、requirements.txt、uv.lock 和独立 Git 仓库。本篇路线不重复编程基础课，也不要求先补做旧练习。
 
 新版从[第 01 篇](chapters/01-backend-entry-and-health.md)创建正式后端代码。第 01–65 篇对应的笔记、知识库、PDF/Office、视觉批处理、Neo4j、Embedding、语义检索、GraphRAG、Web 兜底、多工具 Agent、checkpoint、Chunk 提及、双链、抽取审计和运维治理已接入。
 
