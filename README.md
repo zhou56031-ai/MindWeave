@@ -98,13 +98,21 @@ MindWeave 是一个**面向个人学习的知识工作台**。它把三件通常
 
 ## 界面预览
 
-| 笔记（浅色） | 笔记（深色） |
-|---|---|
-| <img src="docs/images/app-notes-light.png" width="100%" alt="笔记列表 · 浅色"> | <img src="docs/images/app-notes-dark.png" width="100%" alt="笔记列表 · 深色"> |
+**笔记（浅色）**
 
-| AI 对话 | 知识库 |
-|---|---|
-| <img src="docs/images/app-chat-light.png" width="100%" alt="AI 对话"> | <img src="docs/images/app-knowledge-light.png" width="100%" alt="知识库"> |
+<img src="docs/images/app-notes-light.png" width="100%" alt="笔记列表 · 浅色">
+
+**笔记（深色）**
+
+<img src="docs/images/app-notes-dark.png" width="100%" alt="笔记列表 · 深色">
+
+**AI 对话**
+
+<img src="docs/images/app-chat-light.png" width="100%" alt="AI 对话">
+
+**知识库**
+
+<img src="docs/images/app-knowledge-light.png" width="100%" alt="知识库">
 
 ## 系统架构
 
@@ -123,14 +131,6 @@ flowchart LR
     Retrieval -->|降级| MySQL
     Agent --> Model
 ```
-
-三个刻意的取舍：
-
-| 取舍 | 为什么 | 代价 |
-|---|---|---|
-| 图谱异步构建 | 保存笔记不该等实体抽取与向量化；失败可重试 | "保存成功"与"索引就绪"是两个时刻 |
-| 用原生工具循环而非固定工作流 | 让模型自己决定查几次，每轮预算可控 | 行为不如脚本确定，需要更强的防护与观测 |
-| 写操作必须审批 | 模型提出的参数和业务影响要让人看见 | 多一步交互，且审批后不会自动续跑剩余任务 |
 
 ## 一次问答发生了什么
 
