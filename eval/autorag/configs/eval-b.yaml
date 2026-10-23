@@ -1,0 +1,34 @@
+vectordb:
+  - name: stock_qwen
+    db_type: chroma
+    client_type: persistent
+    embedding_model: qwen
+    collection_name: stock_v1
+    path: ${PROJECT_DIR}/resources/chroma
+    embedding_batch: 8
+
+node_lines:
+  - node_line_name: retrieve_node_line
+    nodes:
+      - node_type: semantic_retrieval
+        top_k: 8
+        strategy:
+          metrics: [retrieval_recall, retrieval_f1, retrieval_ndcg]
+        modules:
+          - module_type: vectordb
+            vectordb: stock_qwen
+
+  - node_line_name: post_retrieve_node_line
+    nodes:
+      - node_type: passage_reranker
+        top_k: [3, 5]
+        strategy:
+          metrics: [retrieval_recall, retrieval_f1, retrieval_ndcg]
+        modules:
+          - module_type: rankgpt
+            llm: deepseek_chat
+            model: deepseek-flash
+            api_base: ${DEEPSEEK_BASE_URL}
+            api_key: ${DEEPSEEK_API_KEY}
+            max_tokens: 1024
+            reasoning_effort: none

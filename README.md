@@ -605,7 +605,8 @@ uv run --project backend python eval/e2e.py         # 只跑引用与拒答
 - AutoRAG 是逐节点择优，不保证全局最优；
 - RankGPT 是 listwise 重排，与线上 pointwise 0–3 打分不等价。
 
-> 实验脚本、OCR 文本与原始数据没有随仓库发布；这里保留的是方法、配置与结论。
+> 复现材料已收进 [`eval/autorag/`](eval/autorag/README.md)：OCR 文本、120 条题目、80/40 划分、配置与脚本。
+> 原始 PDF 共 132 MB 且涉及版权，未提交 Git；本地放在 `data/stock-pdfs/`（已忽略），复现不需要它。
 
 ### 两套评测的关系
 
@@ -652,6 +653,7 @@ AutoRAG 的结论被固化成默认值：混合权重 30、`top_k=5`、重排 8�
 | [视觉资产清单](docs/visual-assets.md) | Logo / 插图 / OG 的生成提示词与后处理流程 |
 | [复刻教程](docs/rebuild-guide/README.md) | 从空目录到完整应用的 70 篇后端教学与前端接入记录 |
 | [评测报告](eval/results/report.md) | 60 条回归集的检索、引用与拒答结果 |
+| [AutoRAG 离线对比](eval/autorag/README.md) | 24 份 PDF、190 切片、120 题的复现材料、配置与结论 |
 
 ## 致谢与许可
 

@@ -1,0 +1,77 @@
+vectordb:
+  - name: stock_qwen
+    db_type: chroma
+    client_type: persistent
+    embedding_model: qwen
+    collection_name: stock_v1
+    path: ${PROJECT_DIR}/resources/chroma
+    embedding_batch: 8
+
+node_lines:
+  - node_line_name: retrieve_node_line
+    nodes:
+      - node_type: semantic_retrieval
+        top_k: 5
+        strategy:
+          metrics: [retrieval_recall]
+        modules:
+          - module_type: vectordb
+            vectordb: stock_qwen
+
+  - node_line_name: post_retrieve_node_line
+    nodes:
+      - node_type: prompt_maker
+        strategy:
+          metrics: [bleu, rouge]
+          tokenizer: Qwen/Qwen2.5-0.5B-Instruct
+          # prompt_maker 用生成指标时必须显式给 generator_modules，
+          # 否则它会用默认的 openai/gpt-3.5-turbo（无 key，直接 Missing credentials）
+          generator_modules:
+            - module_type: llama_index_llm
+              llm: openailike
+              model: deepseek-flash
+              api_base: ${DEEPSEEK_BASE_URL}
+              api_key: ${DEEPSEEK_API_KEY}
+              is_chat_model: true
+              temperature: 0.1
+              max_tokens: 4096
+              reasoning_effort: none
+              batch: 2
+        modules:
+          - module_type: chat_fstring
+            prompt:
+              - - role: system
+                  content: "你是严谨的中文交易课程助教。只依据给定资料回答；资料不足就直说不知道。"
+                - role: user
+                  content: |
+                    资料：
+                    {retrieved_contents}
+
+                    问题：{query}
+
+                    请用中文回答，并列出你实际引用的资料编号。
+          - module_type: chat_fstring
+            prompt:
+              - - role: system
+                  content: "你是中文交易课程助教。先给结论，再给依据，不要展开无关内容。"
+                - role: user
+                  content: |
+                    仅根据以下资料回答问题：
+                    {retrieved_contents}
+
+                    问题：{query}
+
+      - node_type: generator
+        strategy:
+          metrics: [bleu, rouge]
+        modules:
+          - module_type: llama_index_llm
+            llm: openailike
+            model: deepseek-flash
+            api_base: ${DEEPSEEK_BASE_URL}
+            api_key: ${DEEPSEEK_API_KEY}
+            is_chat_model: true
+            temperature: 0.1
+            max_tokens: 4096
+            reasoning_effort: none
+            batch: 2
