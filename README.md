@@ -620,17 +620,6 @@ uv run --project backend python eval/e2e.py         # 只跑引用与拒答
 AutoRAG 的结论被固化成默认值：混合权重 30、`top_k=5`、重排 8→3、简洁 prompt；
 仓库内 harness 则负责守住这些默认值不被后续改动破坏。
 
-### 怎么加题
-
-在 `eval/dataset/test.jsonl` 追加一行，保证：
-
-1. `qid` 唯一；
-2. 可答题的 `quote` 是 `chunk_id` 对应切片的连续原文；
-3. 不可答题 `answerable: false`，其余字段留空。
-
-然后重跑 `validate.py`；不通过时它会打印具体是哪条、缺什么。
-
-## 故障排查
 ## 故障排查
 
 | 现象 | 排查 |
