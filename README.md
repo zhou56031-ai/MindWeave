@@ -1,4 +1,7 @@
-<h1 align="center">织识 · MindWeave</h1>
+<h1 align="center">
+  <img src="docs/images/brand-mark.svg" width="28" height="28" alt="" />
+  织识 · MindWeave
+</h1>
 
 <p align="center">
   <strong>把笔记、文档与知识图谱织成一张可检索的网</strong><br />
@@ -6,15 +9,13 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Python-3.12-1f1f1f?style=flat-square" alt="Python">
-  <img src="https://img.shields.io/badge/FastAPI-0.123-1f1f1f?style=flat-square" alt="FastAPI">
-  <img src="https://img.shields.io/badge/Neo4j-5.26-1f1f1f?style=flat-square" alt="Neo4j">
-  <img src="https://img.shields.io/badge/React-19-1f1f1f?style=flat-square" alt="React">
-  <img src="https://img.shields.io/badge/License-MIT-1f1f1f?style=flat-square" alt="License">
-</p>
-
-<p align="center">
-  <img src="docs/images/banner.png" alt="织识 MindWeave" width="100%">
+  <img src="https://img.shields.io/badge/Python-3.12-3776AB?style=for-the-badge&logo=python&logoColor=white" alt="Python">
+  <img src="https://img.shields.io/badge/FastAPI-0.123-009688?style=for-the-badge&logo=fastapi&logoColor=white" alt="FastAPI">
+  <img src="https://img.shields.io/badge/MySQL-8-4479A1?style=for-the-badge&logo=mysql&logoColor=white" alt="MySQL">
+  <img src="https://img.shields.io/badge/Redis-7-DC382D?style=for-the-badge&logo=redis&logoColor=white" alt="Redis">
+  <img src="https://img.shields.io/badge/Neo4j-5.26-018BFF?style=for-the-badge&logo=neo4j&logoColor=white" alt="Neo4j">
+  <img src="https://img.shields.io/badge/React-19-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" alt="React">
+  <img src="https://img.shields.io/badge/License-MIT-3DA639?style=for-the-badge&logo=opensourceinitiative&logoColor=white" alt="License">
 </p>
 
 > 本项目在 MIT 开源项目 [RMA-MUN/RAGNotebook](https://github.com/RMA-MUN/RAGNotebook) 的基础上二次开发：
