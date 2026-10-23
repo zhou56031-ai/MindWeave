@@ -37,7 +37,6 @@
 | [项目结构](#项目结构) | 目录与模块职责 |
 | [API 文档](#api-文档) | 交互式文档与常用接口 |
 | [配置说明](#配置说明) | 模型、Embedding、存储与索引重建 |
-| [工程化改造](#工程化改造2026-10) | 融合、观测、降级与缓存 |
 | [评测](#评测) | 60 条回归集与指标 |
 | [故障排查](#故障排查) | 常见现象与处理 |
 | [Roadmap](#roadmap) | 已完成与计划中 |
@@ -446,24 +445,6 @@ uv run python -m scripts.requeue_rag_index --username <name>
 
 Compose 会自动覆盖 `MYSQL_HOST`、`REDIS_HOST`、`NEO4J_URI` 为服务名；本地开发才使用 `127.0.0.1` 与映射端口。
 `RATE_LIMIT_*` 控制聊天与上传频率，`WEB_SEARCH_*` 控制联网兜底，默认关闭。
-
-## 工程化改造（2026-10）
-
-这一轮不加功能，只把"能跑"变成"可测、可观测、可降级"。
-
-| 改造 | 之前 | 现在 | 代码 |
-|---|---|---|---|
-| 多路融合 | 两路名次分直接相加 | RRF 名次 + 每路配额 + 同 chunk 去重 | `backend/app/rag/fusion.py` |
-| 中文全文 | 特殊字符会让解析失败 | Lucene 转义 + `cjk` 分析器 + 过采样 | `hybrid_retrieval.py` |
-| 成本观测 | 只有日志 | `request.usage` + P50/P95 报表 | `scripts/metrics_report.py` |
-| 稳定性 | 超限即 500 | `agent.loop_stopped` + 部分答案 | `agent/chat_loop.py` |
-| 查询缓存 | 重复 embedding | Redis 缓存查询向量（7 天） | `rag/embedding.py` |
-| 父子块 | 只能取相邻片段 | 子块召回 + 父块回填 | `structured_chunks.py` |
-| 长期记忆 | 只有会话摘要 | `remember` 审批写入 + 偏好总结 | `user_memory.py` |
-| 技能 / MCP | 无 | `load_skill` + stdio MCP | `skills/` / `mcp_server/` |
-| 评测 | 无 | 60 条回归集 + 引用/拒答检查 | `eval/` |
-
-测试：`cd backend && uv run python -m unittest discover -s tests`，**133 项全绿**。
 
 ## 评测
 
